@@ -45,6 +45,12 @@ public class BasicPost {
         this.title = title;
         this.content = content;
         this.writer = writer;
+        writer.getPosts().add(this);
+    }
+
+    public void updateTitleAndContent(String title, String content) {
+        if (title != null) this.title = title;
+        if (content != null) this.content = content;
     }
 
 }

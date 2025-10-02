@@ -54,4 +54,8 @@ public class BasicMember {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public void changePassword(String password) {
+        this.password = password;
+    }
+
 }
