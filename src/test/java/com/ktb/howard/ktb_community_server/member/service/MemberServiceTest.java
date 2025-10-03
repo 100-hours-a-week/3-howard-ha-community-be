@@ -1,0 +1,109 @@
+package com.ktb.howard.ktb_community_server.member.service;
+
+import com.ktb.howard.ktb_community_server.member.domain.Member;
+import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
+import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
+import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
+import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+
+@Transactional
+@SpringBootTest
+class MemberServiceTest {
+
+    @Autowired
+    MemberService memberService;
+
+    @Autowired
+    MemberRepository memberRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Test
+    @DisplayName("회원가입 성공 - 올바른 명세를 지켜 회원가입을 요청한 경우 회원정보를 생성한다")
+    void createMemberSuccessTest() {
+        // given
+        MemberCreateRequestDto request = MemberCreateRequestDto.builder()
+                .email("howard.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("howard.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+
+        // when
+        Member newMember = memberService.createMember(request);
+
+        // then
+        Optional<Member> findMember = memberRepository.findById(Long.valueOf(newMember.getId()));
+        assertThat(newMember.getId()).isNotNull();
+        assertThat(findMember)
+                .isPresent()
+                .get()
+                .extracting("email", "nickname", "profileImageUrl")
+                .containsExactly(
+                        request.getEmail(),
+                        request.getNickname(),
+                        request.getProfileImageUrl()
+                );
+        assertThat(passwordEncoder.matches(request.getPassword(), findMember.get().getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("회원가입 실패 - 이미 가입된 이메일 주소로 가입을 시도하는 경우 409 Conflict와 함께 예외를 반환한다.")
+    void createMemberFailWhenAlreadyUsedEmailTest() {
+        // given
+        MemberCreateRequestDto requestA = MemberCreateRequestDto.builder()
+                .email("howard.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("howard.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+        MemberCreateRequestDto requestB = MemberCreateRequestDto.builder()
+                .email("howard.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("ryan.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+        memberService.createMember(requestA);
+
+        // when // then
+        assertThatThrownBy(() -> memberService.createMember(requestB))
+                .isInstanceOf(AlreadyUsedEmailException.class)
+                .hasMessage("이미 가입에 사용된 이메일 입니다.");
+    }
+
+    @Test
+    @DisplayName("회원가입 실패 - 이미 가입된 닉네임으로 가입을 시도하는 경우 409 Conflict와 함께 예외를 반환한다.")
+    void createMemberFailWhenAlreadyUsedNicknameTest() {
+        // given
+        MemberCreateRequestDto requestA = MemberCreateRequestDto.builder()
+                .email("howard.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("howard.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+        MemberCreateRequestDto requestB = MemberCreateRequestDto.builder()
+                .email("ryan.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("howard.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+        memberService.createMember(requestA);
+
+        // when // then
+        assertThatThrownBy(() -> memberService.createMember(requestB))
+                .isInstanceOf(AlreadyUsedNicknameException.class)
+                .hasMessage("이미 가입에 사용된 닉네임 입니다.");
+    }
+
+}
