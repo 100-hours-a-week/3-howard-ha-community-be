@@ -17,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,7 +54,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -74,7 +75,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -99,7 +100,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -122,7 +123,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest)
         );
@@ -147,7 +148,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -173,7 +174,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -199,7 +200,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -224,7 +225,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -250,7 +251,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -276,7 +277,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -302,7 +303,7 @@ class MemberControllerTest {
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
         // when
-        ResultActions resultActions = mockMvc.perform(post("/member")
+        ResultActions resultActions = mockMvc.perform(post("/members")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest)
         );
@@ -313,6 +314,22 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.errors[0].field").value("profileImageUrl"))
                 .andExpect(jsonPath("$.errors[0].message")
                         .value("프로필 이미지 URL의 길이는 1024를 초과할 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("이메일 체크 - 이메일 형식을 준수하지 않은 경우 400 Bad Request와 관련 에러 메시지를 반환한다")
+    void checkEmailWhenEmailDoNotFollowPolicyTest() throws Exception {
+        // given
+        String email = "howard.ha@@kakaotech.com";
+
+        // when
+        ResultActions resultActions = mockMvc.perform(get("/members/emails/{email}", email));
+
+        // then
+        resultActions
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("email"))
+                .andExpect(jsonPath("$.errors[0].message").value("이메일 형식에 맞지 않습니다."));
     }
 
 }

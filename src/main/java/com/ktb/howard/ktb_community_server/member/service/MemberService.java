@@ -36,4 +36,11 @@ public class MemberService {
         return member;
     }
 
+    @Transactional(readOnly = true)
+    public void checkEmail(String email) {
+        if (memberRepository.existsByEmail(email)) {
+            throw new AlreadyUsedEmailException("이미 가입에 사용된 이메일 입니다.", email);
+        }
+    }
+
 }
