@@ -4,6 +4,7 @@ import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,6 +31,18 @@ public class MemberController {
     ) {
         memberService.checkEmail(email);
         return ResponseEntity.status(200).body("사용 가능한 이메일 입니다.");
+    }
+
+    @GetMapping("/nicknames/{nickname}")
+    public ResponseEntity<String> checkNickname(
+            @Pattern(
+                    regexp = "^\\S{1,10}$",
+                    message = "닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."
+            )
+            @PathVariable String nickname
+    ) {
+        memberService.checkNickname(nickname);
+        return ResponseEntity.status(200).body("사용 가능한 닉네임 입니다.");
     }
 
 }

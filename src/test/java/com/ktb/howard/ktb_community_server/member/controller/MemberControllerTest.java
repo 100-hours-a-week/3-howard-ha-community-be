@@ -332,4 +332,28 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.errors[0].message").value("이메일 형식에 맞지 않습니다."));
     }
 
+    @Test
+    @DisplayName("이메일 체크 - 이메일 형식을 준수하지 않은 경우 400 Bad Request와 관련 에러 메시지를 반환한다")
+    void checkNicknameWhenNicknameDoNotFollowPolicyTest() throws Exception {
+        // given
+        String nicknameA = "howard ha";   // 닉네임에 빈칸을 포함
+        String nicknameB = "howard.park"; // 닉네임 10글자를 초과함
+
+        // when
+        ResultActions resultActionsA = mockMvc.perform(get("/members/nicknames/{nickname}", nicknameA));
+        ResultActions resultActionsB = mockMvc.perform(get("/members/nicknames/{nickname}", nicknameB));
+
+        // then
+        resultActionsA
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("nickname"))
+                .andExpect(jsonPath("$.errors[0].message")
+                        .value("닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."));
+        resultActionsB
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("nickname"))
+                .andExpect(jsonPath("$.errors[0].message")
+                        .value("닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."));
+    }
+
 }

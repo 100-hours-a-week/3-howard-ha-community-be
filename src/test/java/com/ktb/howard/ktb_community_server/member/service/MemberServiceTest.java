@@ -134,4 +134,32 @@ class MemberServiceTest {
                 .hasMessage("이미 가입에 사용된 이메일 입니다.");
     }
 
+    @Test
+    @DisplayName("닉네임 체크 - 회원가입에 사용된 적이 없어 사용 가능한 닉네임의 경우, 어떠한 예외도 반환하지 않는다.")
+    void checkNicknameWhenIsUsableEmailTest() {
+        // given
+        String nickname = "howard.ha";
+
+        // when // then
+        assertThatCode(() -> memberService.checkNickname(nickname)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("닉네임 체크 - 이미 회원가입에 사용되어 사용할 수 없는 닉네임인 경우, 409 Conflict와 함께 예외를 반환한다.")
+    void checkNicknameWhenIsNotUsableEmailTest() {
+        // given
+        Member member = Member.builder()
+                .email("howard.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("howard.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+        memberRepository.save(member);
+
+        // when // then
+        assertThatThrownBy(() -> memberService.checkNickname(member.getNickname()))
+                .isInstanceOf(AlreadyUsedNicknameException.class)
+                .hasMessage("이미 가입에 사용된 닉네임 입니다.");
+    }
+
 }

@@ -19,16 +19,11 @@ public class MemberService {
 
     @Transactional
     public Member createMember(MemberCreateRequestDto request) {
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new AlreadyUsedEmailException("이미 가입에 사용된 이메일 입니다.", request.getEmail());
-        }
-        if (memberRepository.existsByNickname(request.getNickname())) {
-            throw new AlreadyUsedNicknameException("이미 가입에 사용된 닉네임 입니다.", request.getNickname());
-        }
+        checkEmail(request.getEmail());
+        checkNickname(request.getNickname());
         Member member = Member.builder()
                 .email(request.getEmail())
-                .password(encodedPassword)
+                .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .profileImageUrl(request.getProfileImageUrl())
                 .build();
@@ -40,6 +35,13 @@ public class MemberService {
     public void checkEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
             throw new AlreadyUsedEmailException("이미 가입에 사용된 이메일 입니다.", email);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void checkNickname(String nickname) {
+        if (memberRepository.existsByNickname(nickname)) {
+            throw new AlreadyUsedNicknameException("이미 가입에 사용된 닉네임 입니다.", nickname);
         }
     }
 
