@@ -1,6 +1,9 @@
 package com.ktb.howard.ktb_community_server.auth.controller;
 
+import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
+import com.ktb.howard.ktb_community_server.auth.dto.LoginMemberInfoDto;
 import com.ktb.howard.ktb_community_server.auth.dto.LoginRequestDto;
+import com.ktb.howard.ktb_community_server.auth.dto.LoginResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,19 +36,24 @@ public class AuthController {
             Authentication authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword());
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-            // 1. SecurityContext에 인증 정보 저장 (아직 세션에는 저장 전)
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // 2. 세션 고정 보호 전략 실행 -> 익명 세션을 무효화하며 새로운 세션을 생성
             sessionStrategy.onAuthentication(authentication, request, response);
-
-            // 3. SecurityContext를 새로 생성된 세션에 저장
             securityContextRepository.saveContext(SecurityContextHolder.getContext(), request, response);
 
-            String newSessionId = request.getSession().getId();
-            URI location = URI.create("/auth/" + newSessionId);
+            URI location = URI.create("/auth/me");
+            CustomUser loginMember = (CustomUser) authentication.getPrincipal();
+            LoginResponseDto loginResponse = LoginResponseDto.builder()
+                    .member(
+                            LoginMemberInfoDto.builder()
+                                    .id(loginMember.getId())
+                                    .email(loginMember.getUsername())
+                                    .nickname(loginMember.getNickname())
+                                    .build()
+                    )
+                    .message("로그인 되었습니다.")
+                    .build();
 
-            return ResponseEntity.created(location).body("로그인 되었습니다.");
+            return ResponseEntity.created(location).body(loginResponse);
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("입력한 Email 또는 비밀번호가 올바르지 않습니다.");

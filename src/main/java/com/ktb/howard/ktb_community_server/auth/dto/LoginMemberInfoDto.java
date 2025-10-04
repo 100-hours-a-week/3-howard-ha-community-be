@@ -1,0 +1,18 @@
+package com.ktb.howard.ktb_community_server.auth.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@AllArgsConstructor
+@Getter
+public class LoginMemberInfoDto {
+
+    private Integer id;
+
+    private String email;
+
+    private String nickname;
+
+}
