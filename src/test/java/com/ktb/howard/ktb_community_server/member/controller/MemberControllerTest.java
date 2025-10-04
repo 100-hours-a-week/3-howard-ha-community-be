@@ -7,15 +7,13 @@ import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -39,16 +37,8 @@ class MemberControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
+    @MockitoBean
     private MemberService memberService;
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public MemberService memberService() {
-            return Mockito.mock(MemberService.class);
-        }
-    }
 
     @Test
     @DisplayName("회원가입 요청 성공 - 요청 데이터가 모두 정책을 준수한 경우 201 Created를 반환한다")

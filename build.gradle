@@ -47,8 +47,15 @@ dependencies {
     implementation 'org.springframework.session:spring-session-jdbc'
 }
 
-tasks.named('test') {
+tasks.withType(Test).configureEach {
 	useJUnitPlatform()
+    // testRuntimeClasspath에서 mockito-core JAR을 찾아 -javaagent로 전달
+    doFirst {
+        def mockitoJar = configurations.testRuntimeClasspath
+                .filter { it.name.startsWith('mockito-core-') }
+                .singleFile
+        jvmArgs "-javaagent:${mockitoJar.absolutePath}"
+    }
 }
 
 /* QueryDSL 생성 파일 경로 설정 */
