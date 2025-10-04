@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.exception;
 
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,20 @@ public class GlobalExceptionHandler {
                 ))
                 .collect(Collectors.toList());
         return new ValidationErrorResponse("입력값이 올바르지 않습니다.", validationErrors);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ValidationErrorResponse handleValidationExceptions(ConstraintViolationException ex) {
+        List<ValidationErrorResponse.ValidationError> errors = ex.getConstraintViolations()
+                .stream()
+                .map(v -> new ValidationErrorResponse.ValidationError(
+                        java.util.stream.StreamSupport.stream(v.getPropertyPath().spliterator(), false)
+                                .reduce((a, b) -> b).map(jakarta.validation.Path.Node::getName).orElse(""),
+                        v.getMessage()
+                ))
+                .toList();
+        return new ValidationErrorResponse("입력값이 올바르지 않습니다.", errors);
     }
 
     @ExceptionHandler(AlreadyUsedEmailException.class)

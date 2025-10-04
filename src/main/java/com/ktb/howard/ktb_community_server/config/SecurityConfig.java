@@ -50,7 +50,8 @@ public class SecurityConfig {
                         .sessionAuthenticationStrategy(sessionAuthenticationStrategy())
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/member").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/members").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/members/emails/**").permitAll()
                         .requestMatchers(
                                 "/",
                                 "/auth",

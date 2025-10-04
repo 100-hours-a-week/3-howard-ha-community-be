@@ -106,4 +106,32 @@ class MemberServiceTest {
                 .hasMessage("이미 가입에 사용된 닉네임 입니다.");
     }
 
+    @Test
+    @DisplayName("이메일 체크 - 회원가입에 사용된 적이 없어 사용 가능한 이메일인 경우, 어떠한 예외도 반환하지 않는다.")
+    void checkEmailWhenIsUsableEmailTest() {
+        // given
+        String email = "ryan.ha@kakaocrop.com";
+
+        // when // then
+        assertThatCode(() -> memberService.checkEmail(email)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("이메일 체크 - 이미 회원가입에 사용되어 사용할 수 없는 이메일인 경우, 409 Conflict와 함께 예외를 반환한다.")
+    void checkEmailWhenIsNotUsableEmailTest() {
+        // given
+        Member member = Member.builder()
+                .email("howard.ha@kakaocrop.com")
+                .password("Howard12345!")
+                .nickname("howard.ha")
+                .profileImageUrl("https://example.com")
+                .build();
+        memberRepository.save(member);
+
+        // when // then
+        assertThatThrownBy(() -> memberService.checkEmail(member.getEmail()))
+                .isInstanceOf(AlreadyUsedEmailException.class)
+                .hasMessage("이미 가입에 사용된 이메일 입니다.");
+    }
+
 }
