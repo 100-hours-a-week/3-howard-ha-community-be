@@ -31,15 +31,11 @@ public class Member extends BaseEntity {
     @Column(name = "nickname", nullable = false, unique = true)
     private String nickname;
 
-    @Column(name = "profile_image_url")
-    private String profileImageUrl;
-
     @Builder
-    public Member(String email, String password, String nickname, String profileImageUrl) {
+    public Member(String email, String password, String nickname) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
     }
 
 }
