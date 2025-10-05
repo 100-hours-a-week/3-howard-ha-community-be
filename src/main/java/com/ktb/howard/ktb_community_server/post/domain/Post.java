@@ -13,6 +13,13 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
+@Table(
+        name = "post",
+        indexes = @Index(
+                name = "idx_post_deleted_at_created_at",
+                columnList = "deleted_at, created_at"
+        )
+)
 @SQLDelete(sql = "UPDATE post SET deleted_at = NOW() WHERE post_id = ?")
 @SQLRestriction("deleted_at is NULL")
 public class Post extends BaseEntity {
