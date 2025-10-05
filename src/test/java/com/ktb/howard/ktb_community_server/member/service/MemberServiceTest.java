@@ -37,7 +37,6 @@ class MemberServiceTest {
                 .email("howard.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
 
         // when
@@ -49,11 +48,10 @@ class MemberServiceTest {
         assertThat(findMember)
                 .isPresent()
                 .get()
-                .extracting("email", "nickname", "profileImageUrl")
+                .extracting("email", "nickname")
                 .containsExactly(
                         request.getEmail(),
-                        request.getNickname(),
-                        request.getProfileImageUrl()
+                        request.getNickname()
                 );
         assertThat(passwordEncoder.matches(request.getPassword(), findMember.get().getPassword())).isTrue();
     }
@@ -66,13 +64,11 @@ class MemberServiceTest {
                 .email("howard.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         MemberCreateRequestDto requestB = MemberCreateRequestDto.builder()
                 .email("howard.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("ryan.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         memberService.createMember(requestA);
 
@@ -90,13 +86,11 @@ class MemberServiceTest {
                 .email("howard.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         MemberCreateRequestDto requestB = MemberCreateRequestDto.builder()
                 .email("ryan.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         memberService.createMember(requestA);
 
@@ -124,7 +118,6 @@ class MemberServiceTest {
                 .email("howard.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         memberRepository.save(member);
 
@@ -152,7 +145,6 @@ class MemberServiceTest {
                 .email("howard.ha@kakaocrop.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         memberRepository.save(member);
 

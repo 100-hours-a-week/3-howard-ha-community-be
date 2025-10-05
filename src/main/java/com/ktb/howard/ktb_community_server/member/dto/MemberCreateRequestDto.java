@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.hibernate.validator.constraints.Length;
 
 @Builder
 @AllArgsConstructor
@@ -30,8 +29,5 @@ public class MemberCreateRequestDto {
             message = "닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."
     )
     private String nickname;
-
-    @Length(max = 1024, message = "프로필 이미지 URL의 길이는 1024를 초과할 수 없습니다.")
-    private String profileImageUrl;
 
 }

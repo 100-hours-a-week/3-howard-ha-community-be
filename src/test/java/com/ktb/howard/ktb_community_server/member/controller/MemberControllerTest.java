@@ -49,7 +49,6 @@ class MemberControllerTest {
                 .email("howard.ha@kakaotech.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -70,7 +69,6 @@ class MemberControllerTest {
         MemberCreateRequestDto requestDto = MemberCreateRequestDto.builder()
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -95,7 +93,6 @@ class MemberControllerTest {
                 .email("howard.ha|kakaotech.com")
                 .password("Howard12345!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -118,7 +115,6 @@ class MemberControllerTest {
         MemberCreateRequestDto requestDto = MemberCreateRequestDto.builder()
                 .email("howard.ha@kakaotech.com")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -143,7 +139,6 @@ class MemberControllerTest {
                 .email("howard.ha@kakaotech.com")
                 .password("Ab1!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -169,7 +164,6 @@ class MemberControllerTest {
                 .email("howard.ha@kakaotech.com")
                 .password("Password1234567890long!")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -195,7 +189,6 @@ class MemberControllerTest {
                 .email("howard.ha@kakaotech.com")
                 .password("12345")
                 .nickname("howard.ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -220,7 +213,6 @@ class MemberControllerTest {
         MemberCreateRequestDto requestDto = MemberCreateRequestDto.builder()
                 .email("howard.ha@kakaotech.com")
                 .password("Howard12345!")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -246,7 +238,6 @@ class MemberControllerTest {
                 .email("howard.ha@kakaotech.com")
                 .password("Howard12345!")
                 .nickname("howard ha")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -272,7 +263,6 @@ class MemberControllerTest {
                 .email("howard.ha@kakaotech.com")
                 .password("Howard12345!")
                 .nickname("howard.ha12345")
-                .profileImageUrl("https://example.com")
                 .build();
         String jsonRequest = objectMapper.writeValueAsString(requestDto);
 
@@ -288,32 +278,6 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.errors[0].field").value("nickname"))
                 .andExpect(jsonPath("$.errors[0].message")
                         .value("닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."));
-    }
-
-    @Test
-    @DisplayName("회원가입 요청 실패 - 프로필 이미지 URL의 길이가 1024를 초과하는 경우 400 Bad Request와 관련 에러 메시지를 반환한다")
-    void createMemberRequestFailedWhenTooLongProfileImageUrl() throws Exception {
-        // given
-        MemberCreateRequestDto requestDto = MemberCreateRequestDto.builder()
-                .email("howard.ha@kakaotech.com")
-                .password("Howard12345!")
-                .nickname("howard.ha")
-                .profileImageUrl("a".repeat(1025))
-                .build();
-        String jsonRequest = objectMapper.writeValueAsString(requestDto);
-
-        // when
-        ResultActions resultActions = mockMvc.perform(post("/members")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest)
-        );
-
-        // then
-        resultActions
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0].field").value("profileImageUrl"))
-                .andExpect(jsonPath("$.errors[0].message")
-                        .value("프로필 이미지 URL의 길이는 1024를 초과할 수 없습니다."));
     }
 
     @Test
@@ -333,7 +297,7 @@ class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("이메일 체크 - 이메일 형식을 준수하지 않은 경우 400 Bad Request와 관련 에러 메시지를 반환한다")
+    @DisplayName("닉네임 체크 - 닉네임 형식을 준수하지 않은 경우 400 Bad Request와 관련 에러 메시지를 반환한다")
     void checkNicknameWhenNicknameDoNotFollowPolicyTest() throws Exception {
         // given
         String nicknameA = "howard ha";   // 닉네임에 빈칸을 포함

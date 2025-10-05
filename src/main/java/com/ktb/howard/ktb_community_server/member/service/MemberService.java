@@ -25,7 +25,6 @@ public class MemberService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
-                .profileImageUrl(request.getProfileImageUrl())
                 .build();
         memberRepository.save(member);
         return member;
