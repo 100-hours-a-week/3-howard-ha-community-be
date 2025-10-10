@@ -4,6 +4,7 @@ import com.ktb.howard.ktb_community_server.BaseEntity;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
@@ -74,5 +75,27 @@ public class Image extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private ImageStatus status;
+
+    @Builder
+    public Image(ImageType imageType,
+                 String bucketName,
+                 String region,
+                 String objectKey,
+                 String fileName,
+                 Integer fileSize,
+                 String mimeType,
+                 Integer sequence,
+                 ImageStatus status
+    ) {
+        this.imageType = imageType;
+        this.bucketName = bucketName;
+        this.region = region;
+        this.objectKey = objectKey;
+        this.fileName = fileName;
+        this.fileSize = fileSize;
+        this.mimeType = mimeType;
+        this.sequence = sequence;
+        this.status = status;
+    }
 
 }

@@ -45,6 +45,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     /* Spring Session */
     implementation 'org.springframework.session:spring-session-jdbc'
+    /* AWS S3 */
+    implementation platform('software.amazon.awssdk:bom:2.26.25')
+    implementation 'software.amazon.awssdk:s3'
 }
 
 tasks.withType(Test).configureEach {
