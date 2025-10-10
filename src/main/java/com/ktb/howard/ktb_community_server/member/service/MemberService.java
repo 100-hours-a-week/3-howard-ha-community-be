@@ -1,19 +1,23 @@
 package com.ktb.howard.ktb_community_server.member.service;
 
+import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MemberService {
 
+    private final ImageService imageService;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -27,6 +31,13 @@ public class MemberService {
                 .nickname(request.getNickname())
                 .build();
         memberRepository.save(member);
+        if (request.getProfileImageId() != null) {
+            if (!imageService.isExist(request.getProfileImageId())) {
+                log.error("이미지 {}가 존재하지 않습니다.", request.getProfileImageId());
+                throw new IllegalStateException(String.format("이미지 %d가 존재하지 않습니다.", request.getProfileImageId()));
+            }
+            imageService.persistImage(request.getProfileImageId(), member, member.getId().longValue());
+        }
         return member;
     }
 
