@@ -3,6 +3,7 @@ package com.ktb.howard.ktb_community_server.member.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,5 +30,8 @@ public class MemberCreateRequestDto {
             message = "닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."
     )
     private String nickname;
+
+    @Positive(message = "프로필 이미지 ID값이 올바르지 않습니다.")
+    private Long profileImageId;
 
 }

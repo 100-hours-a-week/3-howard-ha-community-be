@@ -98,4 +98,20 @@ public class Image extends BaseEntity {
         this.status = status;
     }
 
+    public void updateStatus(ImageStatus status) {
+        this.status = status;
+    }
+
+    public void updateOwner(Member owner) {
+        this.owner = owner;
+    }
+
+    public void updateReference(Long referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public void updateObjectKey(String objectKey) {
+        this.objectKey = objectKey;
+    }
+
 }
