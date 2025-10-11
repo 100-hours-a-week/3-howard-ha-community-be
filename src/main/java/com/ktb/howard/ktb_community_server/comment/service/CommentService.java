@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
+
 @RequiredArgsConstructor
 @Service
 public class CommentService {
@@ -42,6 +44,13 @@ public class CommentService {
                 parentComment != null ? comment.getParentComment().getId() : null,
                 comment.getContent()
         );
+    }
+
+    @Transactional
+    public void updateComment(Long commentId, String content) {
+        Comment findComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NoSuchElementException(commentId + "에 대응하는 댓글을 찾을 수 없습니다."));
+        findComment.updateContent(content);
     }
 
     @Transactional

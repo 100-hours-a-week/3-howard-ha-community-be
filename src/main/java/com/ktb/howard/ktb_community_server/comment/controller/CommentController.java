@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.comment.controller;
 
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
+import com.ktb.howard.ktb_community_server.comment.dto.UpdateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,15 @@ public class CommentController {
     public ResponseEntity<CreateCommentResponseDto> createComment(@Valid @RequestBody CreateCommentRequestDto request) {
         CreateCommentResponseDto response = commentService.createComment(request);
         return ResponseEntity.status(200).body(response);
+    }
+
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<String> updateComment(
+            @PathVariable Long commentId,
+            @Valid @RequestBody UpdateCommentRequestDto request
+            ) {
+        commentService.updateComment(commentId, request.content());
+        return ResponseEntity.status(200).body("댓글이 수정되었습니다.");
     }
 
     @DeleteMapping("/{commentId}")

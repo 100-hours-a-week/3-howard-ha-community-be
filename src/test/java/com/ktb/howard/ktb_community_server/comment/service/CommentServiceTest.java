@@ -8,8 +8,6 @@ import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -126,6 +125,42 @@ class CommentServiceTest {
                         findComment.get().getParentComment().getId(),
                         findComment.get().getContent()
                 );
+    }
+
+    @Test
+    @DisplayName("댓글 수정 성공 - 요청한 댓글이 존재하는 경우, 요청된 본문으로 댓글의 내용을 수정한다.")
+    void updateCommentSuccessTest() {
+        // given
+        Post post = postRepository.getReferenceById(prePost.getId());
+        Member member = memberRepository.getReferenceById(preMember.getId().longValue());
+        Comment parentComment = commentRepository.getReferenceById(preParentComment.getId());
+        Comment comment = Comment.builder()
+                .post(post)
+                .member(member)
+                .parentComment(parentComment)
+                .content("수정 이전의 댓글")
+                .build();
+        commentRepository.save(comment);
+
+        // when
+        String updatedContent = "수정된 댓글";
+        commentService.updateComment(comment.getId(), updatedContent);
+
+        // then
+        Comment updatedComment = commentRepository.findById(comment.getId())
+                .orElseThrow(() -> new AssertionError("댓글이 존재하지 않습니다."));
+        assertThat(updatedComment.getContent()).isEqualTo(updatedContent);
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 - 요청한 댓글이 존재하지 않는 경우, 예외를 반환한다.")
+    void updateCommentFailTest() {
+        // given
+
+        // when // then
+        assertThatThrownBy(() -> commentService.updateComment(1L, "수정된 댓글"))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessage(1L + "에 대응하는 댓글을 찾을 수 없습니다.");
     }
 
     @Test
