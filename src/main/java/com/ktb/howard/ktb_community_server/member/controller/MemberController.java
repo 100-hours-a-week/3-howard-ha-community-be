@@ -60,4 +60,11 @@ public class MemberController {
         return ResponseEntity.status(200).body(response);
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/me")
+    public ResponseEntity<String> deleteMember(@AuthenticationPrincipal CustomUser loginMember) {
+        memberService.deleteMember(loginMember.getId());
+        return ResponseEntity.status(200).body("회원 탈퇴가 완료되었습니다.");
+    }
+
 }

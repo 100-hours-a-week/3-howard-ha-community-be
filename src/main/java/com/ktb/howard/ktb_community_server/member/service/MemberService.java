@@ -74,4 +74,9 @@ public class MemberService {
         return new MemberInfoResponseDto(email, nickname, profileImageUrl);
     }
 
+    @Transactional
+    public void deleteMember(Integer memberId) {
+        memberRepository.deleteById(memberId.longValue());
+    }
+
 }
