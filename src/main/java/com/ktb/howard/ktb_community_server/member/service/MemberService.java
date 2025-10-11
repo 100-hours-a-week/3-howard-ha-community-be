@@ -1,16 +1,24 @@
 package com.ktb.howard.ktb_community_server.member.service;
 
+import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
+import com.ktb.howard.ktb_community_server.image.dto.GetImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
+import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -53,6 +61,17 @@ public class MemberService {
         if (memberRepository.existsByNickname(nickname)) {
             throw new AlreadyUsedNicknameException("이미 가입에 사용된 닉네임 입니다.", nickname);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public MemberInfoResponseDto getMyProfile(Integer memberId, String email, String nickname) {
+        Long imageId = imageService.getMemberProfileImageId(memberId);
+        String profileImageUrl = null;
+        if (imageId != null) {
+            GetImageUrlResponseDto imageViewUrl = imageService.getImageViewUrl(List.of(imageId));
+            profileImageUrl = imageViewUrl.getImages().getFirst().url();
+        }
+        return new MemberInfoResponseDto(email, nickname, profileImageUrl);
     }
 
 }

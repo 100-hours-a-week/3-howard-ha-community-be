@@ -7,6 +7,8 @@ import com.ktb.howard.ktb_community_server.image.dto.*;
 import com.ktb.howard.ktb_community_server.image.repository.ImageRepository;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.service.S3Service;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
+import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
+import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,6 +120,11 @@ public class ImageService {
         image.updateObjectKey(persistObjectKey);
         image.updateStatus(ImageStatus.PERSIST);
         imageRepository.save(image);
+    }
+
+    @Transactional(readOnly = true)
+    public Long getMemberProfileImageId(Integer memberId) {
+        return imageRepository.findImageIdByImageTypeAndOwner(ImageType.PROFILE, memberId);
     }
 
     private String generateTemporalObjectKey(ImageType imageType, String originalFileName) {
