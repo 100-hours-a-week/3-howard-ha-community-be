@@ -8,8 +8,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -21,8 +19,6 @@ import org.hibernate.annotations.SQLRestriction;
                 columnList = "post_id, deleted_at, created_at"
         )
 )
-@SQLDelete(sql = "UPDATE comment SET deleted_at = NOW() WHERE comment_id = ?")
-@SQLRestriction("deleted_at is NULL")
 public class Comment extends BaseEntity {
 
     @Id
@@ -38,7 +34,7 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment_id")
     private Comment parentComment;
 

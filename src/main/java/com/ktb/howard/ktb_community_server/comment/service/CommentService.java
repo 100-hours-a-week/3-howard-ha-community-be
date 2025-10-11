@@ -44,4 +44,9 @@ public class CommentService {
         );
     }
 
+    @Transactional
+    public void softDeleteByCommentId(Long commentId) {
+        commentRepository.softDeleteByCommentId(commentId);
+    }
+
 }
