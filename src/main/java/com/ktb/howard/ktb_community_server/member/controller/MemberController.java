@@ -52,7 +52,7 @@ public class MemberController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<MemberInfoResponseDto> getMyProfile(@AuthenticationPrincipal CustomUser loginMember) {
-        MemberInfoResponseDto response = memberService.getMyProfile(
+        MemberInfoResponseDto response = memberService.getProfile(
                 loginMember.getId(),
                 loginMember.getEmail(),
                 loginMember.getNickname()
