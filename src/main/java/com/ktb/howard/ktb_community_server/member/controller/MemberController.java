@@ -1,12 +1,16 @@
 package com.ktb.howard.ktb_community_server.member.controller;
 
+import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
 import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
+import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +47,17 @@ public class MemberController {
     ) {
         memberService.checkNickname(nickname);
         return ResponseEntity.status(200).body("사용 가능한 닉네임 입니다.");
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public ResponseEntity<MemberInfoResponseDto> getMyProfile(@AuthenticationPrincipal CustomUser loginMember) {
+        MemberInfoResponseDto response = memberService.getMyProfile(
+                loginMember.getId(),
+                loginMember.getEmail(),
+                loginMember.getNickname()
+        );
+        return ResponseEntity.status(200).body(response);
     }
 
 }
