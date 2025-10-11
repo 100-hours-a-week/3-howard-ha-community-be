@@ -50,13 +50,10 @@ public class Post extends BaseEntity {
     private Long commentCount = 0L;
 
     @Builder
-    public Post(Member writer, String title, String content, Integer likeCount, Long viewCount, Long commentCount) {
+    public Post(Member writer, String title, String content) {
         this.writer = writer;
         this.title = title;
         this.content = content;
-        this.likeCount = likeCount;
-        this.viewCount = viewCount;
-        this.commentCount = commentCount;
     }
 
 }
