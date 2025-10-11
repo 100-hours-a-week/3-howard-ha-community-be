@@ -45,4 +45,14 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<String> deletePostById(
+            @AuthenticationPrincipal CustomUser loginMember,
+            @PathVariable Long postId
+    ) {
+        postService.deletePostById(loginMember.getId(), postId);
+        return ResponseEntity.ok("게시글이 삭제되었습니다.");
+    }
+
 }

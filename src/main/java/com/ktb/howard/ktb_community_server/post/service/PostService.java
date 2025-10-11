@@ -12,6 +12,7 @@ import com.ktb.howard.ktb_community_server.post.dto.PostImageInfo;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +79,16 @@ public class PostService {
                 .commentCount(post.getCommentCount())
                 .createdAt(post.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void deletePostById(Integer loginMemberId, Long postId) {
+        Post findPost = postRepository.findById(postId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
+        if (!loginMemberId.equals(findPost.getWriter().getId())) {
+            throw new AccessDeniedException("올바르지 않은 요청입니다.");
+        }
+        postRepository.deleteById(postId);
     }
 
 }
