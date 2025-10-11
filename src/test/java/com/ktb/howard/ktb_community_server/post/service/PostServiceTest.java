@@ -10,9 +10,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -104,6 +106,71 @@ class PostServiceTest {
 
         // when // then
         assertThatThrownBy(() -> postService.getPostDetail(1L))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessage("존재하지 않는 게시글입니다.");
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 성공 - 요청한 게시글에 대한 권한을 가진 사용자가 삭제를 요청한 경우, 대응하는 ID의 게시글을 제거한다.")
+    void deletePostSuccessTest() {
+        // given
+        Member writer = Member.builder()
+                .email("test@example.com")
+                .password("Password12345!")
+                .nickname("test.park")
+                .build();
+        memberRepository.save(writer);
+        Post post = Post.builder()
+                .writer(writer)
+                .title("테스트 제목1")
+                .content("테스트용 게시글 본문1")
+                .build();
+        postRepository.save(post);
+
+        // when
+        postService.deletePostById(writer.getId(), post.getId());
+
+        // then
+        Optional<Post> deletedPost = postRepository.findById(post.getId());
+        assertThat(deletedPost).isNotPresent();
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 - 요청한 게시글에 대한 권한이 없는 사용자가 삭제를 요청한 경우, 예외를 반환한다.")
+    void deletePostFailWhenNotAuthorizedTest() {
+        // given
+        Member writer = Member.builder()
+                .email("test@example.com")
+                .password("Password12345!")
+                .nickname("test.park")
+                .build();
+        memberRepository.save(writer);
+        Post post = Post.builder()
+                .writer(writer)
+                .title("테스트 제목1")
+                .content("테스트용 게시글 본문1")
+                .build();
+        postRepository.save(post);
+
+        // when // then
+        assertThatThrownBy(() -> postService.deletePostById(writer.getId() + 1, post.getId()))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("올바르지 않은 요청입니다.");
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 - 요청한 게시글이 존재하지 않는 경우, 예외를 반환한다.")
+    void deletePostFailWhenPostNotExistTest() {
+        // given
+        Member writer = Member.builder()
+                .email("test@example.com")
+                .password("Password12345!")
+                .nickname("test.park")
+                .build();
+        memberRepository.save(writer);
+
+        // when // then
+        assertThatThrownBy(() -> postService.deletePostById(writer.getId(), 1L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 게시글입니다.");
     }
