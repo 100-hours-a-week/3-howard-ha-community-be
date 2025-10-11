@@ -1,7 +1,6 @@
 package com.ktb.howard.ktb_community_server.comment.service;
 
 import com.ktb.howard.ktb_community_server.comment.domain.Comment;
-import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -72,15 +72,14 @@ class CommentServiceTest {
         // given
         Post post = postRepository.getReferenceById(prePost.getId());
         Member member = memberRepository.getReferenceById(preMember.getId().longValue());
-        CreateCommentRequestDto request = new CreateCommentRequestDto(
+
+        // when
+        CreateCommentResponseDto response = commentService.createComment(
                 post.getId(),
                 member.getId(),
                 null,
                 "테스트용 댓글1"
         );
-
-        // when
-        CreateCommentResponseDto response = commentService.createComment(request);
 
         // then
         Optional<Comment> findComment = commentRepository.findById(response.commentId());
@@ -103,15 +102,14 @@ class CommentServiceTest {
         Post post = postRepository.getReferenceById(prePost.getId());
         Member member = memberRepository.getReferenceById(preMember.getId().longValue());
         Comment parentComment = commentRepository.getReferenceById(preParentComment.getId());
-        CreateCommentRequestDto request = new CreateCommentRequestDto(
+
+        // when
+        CreateCommentResponseDto response = commentService.createComment(
                 post.getId(),
                 member.getId(),
                 parentComment.getId(),
                 "테스트용 댓글2"
         );
-
-        // when
-        CreateCommentResponseDto response = commentService.createComment(request);
 
         // then
         Optional<Comment> findComment = commentRepository.findById(response.commentId());
@@ -144,7 +142,7 @@ class CommentServiceTest {
 
         // when
         String updatedContent = "수정된 댓글";
-        commentService.updateComment(comment.getId(), updatedContent);
+        commentService.updateComment(member.getId(), comment.getId(), updatedContent);
 
         // then
         Comment updatedComment = commentRepository.findById(comment.getId())
@@ -153,19 +151,42 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("댓글 수정 실패 - 요청한 댓글이 존재하지 않는 경우, 예외를 반환한다.")
-    void updateCommentFailTest() {
+    @DisplayName("댓글 수정 실패 - 요청한 댓글에 대한 권한이 없는 사용자가 수정을 요청한 경우, 예외를 반환한다.")
+    void updateCommentFailWhenNotAuthorizedTest() {
         // given
+        Post post = postRepository.getReferenceById(prePost.getId());
+        Member member = memberRepository.getReferenceById(preMember.getId().longValue());
+        Comment parentComment = commentRepository.getReferenceById(preParentComment.getId());
+        Comment comment = Comment.builder()
+                .post(post)
+                .member(member)
+                .parentComment(parentComment)
+                .content("수정 이전의 댓글")
+                .build();
+        commentRepository.save(comment);
 
         // when // then
-        assertThatThrownBy(() -> commentService.updateComment(1L, "수정된 댓글"))
+        String updatedContent = "수정된 댓글";
+        assertThatThrownBy(() -> commentService.updateComment(member.getId() + 1, comment.getId(), updatedContent))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("올바르지 않은 요청입니다.");
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 - 요청한 댓글이 존재하지 않는 경우, 예외를 반환한다.")
+    void updateCommentFailWhenCommentNotExistTest() {
+        // given
+        Member member = memberRepository.getReferenceById(preMember.getId().longValue());
+
+        // when // then
+        assertThatThrownBy(() -> commentService.updateComment(member.getId(), 1L, "수정된 댓글"))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage(1L + "에 대응하는 댓글을 찾을 수 없습니다.");
     }
 
     @Test
-    @DisplayName("댓글 삭제 - 댓글 삭제 시 해당 댓글만 제거하며, 해당 댓글에 포함된 대댓글은 유지한다.")
-    void deleteCommentTest() {
+    @DisplayName("댓글 삭제 성공 - 댓글 삭제 시 해당 댓글만 제거하며, 해당 댓글에 포함된 대댓글은 유지한다.")
+    void deleteCommentSuccessTest() {
         // given
         Post post = postRepository.getReferenceById(prePost.getId());
         Member member = memberRepository.getReferenceById(preMember.getId().longValue());
@@ -193,7 +214,7 @@ class CommentServiceTest {
         commentRepository.save(childCommentC);
 
         // when
-        commentService.softDeleteByCommentId(parentComment.getId());
+        commentService.softDeleteByCommentId(member.getId(), parentComment.getId());
 
         // then
         Optional<Comment> deletedComment = commentRepository.findById(parentComment.getId());
@@ -202,6 +223,30 @@ class CommentServiceTest {
         assertThat(childComments).hasSize(3)
                 .extracting("id")
                 .contains(childCommentA.getId(), childCommentB.getId(), childCommentC.getId());
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 - 요청한 댓글에 대한 권한이 없는 사용자가 삭제를 요청한 경우, 예외를 반환한다.")
+    void deleteCommentFailWhenNotAuthorizedTest() {
+        Member member = memberRepository.getReferenceById(preMember.getId().longValue());
+        Comment parentComment = commentRepository.getReferenceById(preParentComment.getId());
+
+        // when // then
+        assertThatThrownBy(() -> commentService.softDeleteByCommentId(member.getId() + 1, parentComment.getId()))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("올바르지 않은 요청입니다.");
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 - 요청한 댓글이 존재하지 않는 경우, 예외를 반환한다.")
+    void deleteCommentFailWhenCommentNotExistTest() {
+        Member member = memberRepository.getReferenceById(preMember.getId().longValue());
+        Comment parentComment = commentRepository.getReferenceById(preParentComment.getId());
+
+        // when // then
+        assertThatThrownBy(() -> commentService.softDeleteByCommentId(member.getId(), parentComment.getId() + 1))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessage((parentComment.getId() + 1) + "에 대응하는 댓글을 찾을 수 없습니다.");
     }
 
 }
