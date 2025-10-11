@@ -2,9 +2,12 @@ package com.ktb.howard.ktb_community_server.post.service;
 
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
+import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
+import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
+import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
 import com.ktb.howard.ktb_community_server.post.dto.PostImageInfo;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ import java.util.List;
 public class PostService {
 
     private final ImageService imageService;
+    private final MemberService memberService;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
@@ -55,6 +60,24 @@ public class PostService {
                 post.getContent(),
                 postImages
         );
+    }
+
+    @Transactional(readOnly = true)
+    public PostDetailDto getPostDetail(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
+        Member writer = post.getWriter();
+        MemberInfoResponseDto profile = memberService.getProfile(writer.getId(), writer.getEmail(), writer.getNickname());
+        return PostDetailDto.builder()
+                .postId(postId)
+                .writer(profile)
+                .title(post.getTitle())
+                .content(post.getContent())
+                .likeCount(post.getLikeCount())
+                .viewCount(post.getViewCount())
+                .commentCount(post.getCommentCount())
+                .createdAt(post.getCreatedAt())
+                .build();
     }
 
 }

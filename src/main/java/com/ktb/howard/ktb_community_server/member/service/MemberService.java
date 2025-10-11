@@ -1,6 +1,5 @@
 package com.ktb.howard.ktb_community_server.member.service;
 
-import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
 import com.ktb.howard.ktb_community_server.image.dto.GetImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
@@ -11,9 +10,6 @@ import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameE
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +60,7 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public MemberInfoResponseDto getMyProfile(Integer memberId, String email, String nickname) {
+    public MemberInfoResponseDto getProfile(Integer memberId, String email, String nickname) {
         Long imageId = imageService.getMemberProfileImageId(memberId);
         String profileImageUrl = null;
         if (imageId != null) {
