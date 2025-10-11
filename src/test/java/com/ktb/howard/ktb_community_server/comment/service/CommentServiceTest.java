@@ -53,9 +53,6 @@ class CommentServiceTest {
                 .writer(preMember)
                 .title("test title")
                 .content("test content")
-                .likeCount(0)
-                .viewCount(0L)
-                .commentCount(0L)
                 .build();
         postRepository.save(prePost);
         preParentComment = Comment.builder()
