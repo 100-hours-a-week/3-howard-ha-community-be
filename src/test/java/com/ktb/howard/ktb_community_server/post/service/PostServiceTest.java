@@ -8,6 +8,7 @@ import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
+import com.ktb.howard.ktb_community_server.post.dto.GetPostsResponseDto;
 import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -70,6 +73,179 @@ class PostServiceTest {
                         0,
                         0L,
                         0L
+                );
+    }
+
+    @Test
+    @DisplayName("게시글 목록 조회 - 커서의 값이 0인 경우, 가장 최근 게시글을 조회하여 반환한다.")
+    void getPostsNoCursorTest() throws InterruptedException {
+        // given
+        Member writer = Member.builder()
+                .email("test@example.com")
+                .password("Password12345!")
+                .nickname("test.park")
+                .build();
+        memberRepository.save(writer);
+        Post post1 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목1")
+                .content("테스트용 게시글 본문1")
+                .build();
+        postRepository.save(post1);
+        Thread.sleep(500);
+        Post post2 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목2")
+                .content("테스트용 게시글 본문2")
+                .build();
+        postRepository.save(post2);
+        Thread.sleep(500);
+        Post post3 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목3")
+                .content("테스트용 게시글 본문3")
+                .build();
+        postRepository.save(post3);
+        Thread.sleep(500);
+        Post post4 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목4")
+                .content("테스트용 게시글 본문4")
+                .build();
+        postRepository.save(post4);
+        Thread.sleep(500);
+        Post post5 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목5")
+                .content("테스트용 게시글 본문5")
+                .build();
+        post5.updateDeletedAt(LocalDateTime.now());
+        postRepository.save(post5);
+
+        // when
+        List<GetPostsResponseDto> posts = postService.getPosts(0L, 3);
+
+        // then
+        assertThat(posts).hasSize(3)
+                .extracting(
+                        "title",
+                        "likeCount",
+                        "viewCount",
+                        "commentCount",
+                        "createdAt",
+                        "writer.email",
+                        "writer.nickname"
+                )
+                .containsExactly(
+                        tuple(
+                                post4.getTitle(),
+                                post4.getLikeCount(),
+                                post4.getViewCount(),
+                                post4.getCommentCount(),
+                                post4.getCreatedAt(),
+                                post4.getWriter().getEmail(),
+                                post4.getWriter().getNickname()
+                        ),
+                        tuple(
+                                post3.getTitle(),
+                                post3.getLikeCount(),
+                                post3.getViewCount(),
+                                post3.getCommentCount(),
+                                post3.getCreatedAt(),
+                                post3.getWriter().getEmail(),
+                                post3.getWriter().getNickname()
+                        ),
+                        tuple(
+                                post2.getTitle(),
+                                post2.getLikeCount(),
+                                post2.getViewCount(),
+                                post2.getCommentCount(),
+                                post2.getCreatedAt(),
+                                post2.getWriter().getEmail(),
+                                post2.getWriter().getNickname()
+                        )
+                );
+    }
+
+    @Test
+    @DisplayName("게시글 목록 조회 - 커서의 값이 0이 아닌 경우, 해당 커서 이후의 값을 조회하여 반환한다.")
+    void getPostsWithCursorTest() throws InterruptedException {
+        // given
+        Member writer = Member.builder()
+                .email("test@example.com")
+                .password("Password12345!")
+                .nickname("test.park")
+                .build();
+        memberRepository.save(writer);
+        Post post1 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목1")
+                .content("테스트용 게시글 본문1")
+                .build();
+        postRepository.save(post1);
+        Thread.sleep(500);
+        Post post2 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목2")
+                .content("테스트용 게시글 본문2")
+                .build();
+        postRepository.save(post2);
+        Thread.sleep(500);
+        Post post3 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목3")
+                .content("테스트용 게시글 본문3")
+                .build();
+        postRepository.save(post3);
+        Thread.sleep(500);
+        Post post4 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목4")
+                .content("테스트용 게시글 본문4")
+                .build();
+        postRepository.save(post4);
+        Thread.sleep(500);
+        Post post5 = Post.builder()
+                .writer(writer)
+                .title("테스트 제목5")
+                .content("테스트용 게시글 본문5")
+                .build();
+        post5.updateDeletedAt(LocalDateTime.now());
+        postRepository.save(post5);
+
+        // when
+        List<GetPostsResponseDto> posts = postService.getPosts(post2.getId(), 3);
+
+        // then
+        assertThat(posts).hasSize(2)
+                .extracting(
+                        "title",
+                        "likeCount",
+                        "viewCount",
+                        "commentCount",
+                        "createdAt",
+                        "writer.email",
+                        "writer.nickname"
+                )
+                .containsExactly(
+                        tuple(
+                                post2.getTitle(),
+                                post2.getLikeCount(),
+                                post2.getViewCount(),
+                                post2.getCommentCount(),
+                                post2.getCreatedAt(),
+                                post2.getWriter().getEmail(),
+                                post2.getWriter().getNickname()
+                        ),
+                        tuple(
+                                post1.getTitle(),
+                                post1.getLikeCount(),
+                                post1.getViewCount(),
+                                post1.getCommentCount(),
+                                post1.getCreatedAt(),
+                                post1.getWriter().getEmail(),
+                                post1.getWriter().getNickname()
+                        )
                 );
     }
 
