@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -15,6 +16,8 @@ public class PostDetailDto {
     private Long postId;
 
     private MemberInfoResponseDto writer;
+
+    private List<PostImageInfoDto> postImages;
 
     private String title;
 

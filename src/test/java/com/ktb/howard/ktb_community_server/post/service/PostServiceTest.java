@@ -1,5 +1,9 @@
 package com.ktb.howard.ktb_community_server.post.service;
 
+import com.ktb.howard.ktb_community_server.image.domain.Image;
+import com.ktb.howard.ktb_community_server.image.domain.ImageStatus;
+import com.ktb.howard.ktb_community_server.image.domain.ImageType;
+import com.ktb.howard.ktb_community_server.image.repository.ImageRepository;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
@@ -30,6 +34,9 @@ class PostServiceTest {
 
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    ImageRepository imageRepository;
 
     @Test
     @DisplayName("게시글 생성 - 게시글 이미지를 첨부하지 않은 경우")
@@ -82,9 +89,38 @@ class PostServiceTest {
                 .content("테스트용 게시글 본문1")
                 .build();
         postRepository.save(post);
+        Image image1 = Image.builder()
+                .imageType(ImageType.POST)
+                .bucketName("test-bucket")
+                .region("test-region")
+                .objectKey("/test/test1.jpeg")
+                .fileName("test1.jpeg")
+                .fileSize(1234)
+                .mimeType("image/jpeg")
+                .sequence(1)
+                .status(ImageStatus.PERSIST)
+                .build();
+        image1.updateOwner(writer);
+        image1.updateReference(post.getId());
+        Image image2 = Image.builder()
+                .imageType(ImageType.POST)
+                .bucketName("test-bucket")
+                .region("test-region")
+                .objectKey("/test/test2.jpeg")
+                .fileName("test2.jpeg")
+                .fileSize(1234)
+                .mimeType("image/jpeg")
+                .sequence(2)
+                .status(ImageStatus.PERSIST)
+                .build();
+        image2.updateOwner(writer);
+        image2.updateReference(post.getId());
+        imageRepository.save(image1);
+        imageRepository.save(image2);
 
         // when
         PostDetailDto response = postService.getPostDetail(post.getId());
+        System.out.println("response = " + response);
 
         // then
         assertThat(response.getPostId()).isEqualTo(post.getId());
@@ -97,6 +133,7 @@ class PostServiceTest {
         assertThat(response.getWriter())
                 .extracting("email", "nickname", "profileImageUrl")
                 .containsExactly(writer.getEmail(), writer.getNickname(), null);
+        assertThat(response.getPostImages()).hasSize(2);
     }
 
     @Test

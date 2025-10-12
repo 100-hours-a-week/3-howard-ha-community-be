@@ -2,25 +2,21 @@ package com.ktb.howard.ktb_community_server.image.dto;
 
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
 
 @AllArgsConstructor
 @Getter
-@Builder
-public class GetImageUploadUrlRequestDto {
+public class CreateImageViewUrlRequestDto {
 
     private ImageType imageType;
 
-    private List<ImageUploadRequestInfoDto> images;
+    private List<ImageViewRequestInfoDto> images;
 
-    public record ImageUploadRequestInfoDto(
+    public record ImageViewRequestInfoDto(
             ImageType imageType,
-            String fileName,
-            Integer fileSize,
-            String mimeType,
+            Long imageId,
             Integer sequence
     ) { }
 

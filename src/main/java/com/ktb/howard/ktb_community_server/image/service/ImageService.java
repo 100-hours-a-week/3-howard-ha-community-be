@@ -7,8 +7,6 @@ import com.ktb.howard.ktb_community_server.image.dto.*;
 import com.ktb.howard.ktb_community_server.image.repository.ImageRepository;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.service.S3Service;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
-import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
-import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,9 +34,9 @@ public class ImageService {
     private String region;
 
     @Transactional
-    public GetImageUploadUrlResponseDto getImageUploadUrl(GetImageUploadUrlRequestDto request) {
-        List<GetImageUploadUrlResponseDto.ImageUploadResponseInfoDto> images = new ArrayList<>();
-        for (GetImageUploadUrlRequestDto.ImageUploadRequestInfoDto image : request.getImages()) {
+    public CreateImageUploadUrlResponseDto createImageUploadUrl(CreateImageUploadUrlRequestDto request) {
+        List<CreateImageUploadUrlResponseDto.ImageUploadResponseInfoDto> images = new ArrayList<>();
+        for (CreateImageUploadUrlRequestDto.ImageUploadRequestInfoDto image : request.getImages()) {
             String temporalObjectKey = generateTemporalObjectKey(request.getImageType(), image.fileName());
             String[] tokens = temporalObjectKey.split("/");
             String reservedFileName = tokens[tokens.length - 1];
@@ -59,28 +57,28 @@ public class ImageService {
                     .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();
             images.add(
-                    new GetImageUploadUrlResponseDto.ImageUploadResponseInfoDto(
+                    new CreateImageUploadUrlResponseDto.ImageUploadResponseInfoDto(
                             uploadInfo.url(),
                             reserved.getId(),
                             expiresAt
                     )
             );
         }
-        return GetImageUploadUrlResponseDto.builder()
+        return CreateImageUploadUrlResponseDto.builder()
                 .images(images)
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public GetImageUrlResponseDto getImageViewUrl(List<Long> request) {
+    public GetImageUrlResponseDto createImageViewUrl(CreateImageViewUrlRequestDto request) {
         List<GetImageUrlResponseDto.ImageUrlInfoDto> images = new ArrayList<>();
-        for (Long imageId : request) {
-            String objectKey = imageRepository.findObjectKeyById(imageId);
+        for (CreateImageViewUrlRequestDto.ImageViewRequestInfoDto image : request.getImages()) {
+            String objectKey = imageRepository.findObjectKeyById(image.imageId());
             S3Service.ViewPresignResponse urlInfo = s3Service.getUrl(objectKey);
             LocalDateTime expiresAt = urlInfo.expiresAt()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();
-            images.add(new GetImageUrlResponseDto.ImageUrlInfoDto(urlInfo.url(), expiresAt));
+            images.add(new GetImageUrlResponseDto.ImageUrlInfoDto(urlInfo.url(), image.sequence(), expiresAt));
         }
         return GetImageUrlResponseDto.builder()
                 .images(images)
@@ -125,6 +123,11 @@ public class ImageService {
     @Transactional(readOnly = true)
     public Long getMemberProfileImageId(Integer memberId) {
         return imageRepository.findImageIdByImageTypeAndOwner(ImageType.PROFILE, memberId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Image> getPostImageByPostId(Long postId) {
+        return imageRepository.findImageByImageTypeAndReferenceId(ImageType.POST, postId);
     }
 
     private String generateTemporalObjectKey(ImageType imageType, String originalFileName) {

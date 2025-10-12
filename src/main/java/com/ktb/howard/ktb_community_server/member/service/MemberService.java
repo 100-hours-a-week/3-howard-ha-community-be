@@ -1,5 +1,7 @@
 package com.ktb.howard.ktb_community_server.member.service;
 
+import com.ktb.howard.ktb_community_server.image.domain.ImageType;
+import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
 import com.ktb.howard.ktb_community_server.image.dto.GetImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
@@ -64,7 +66,17 @@ public class MemberService {
         Long imageId = imageService.getMemberProfileImageId(memberId);
         String profileImageUrl = null;
         if (imageId != null) {
-            GetImageUrlResponseDto imageViewUrl = imageService.getImageViewUrl(List.of(imageId));
+            CreateImageViewUrlRequestDto request
+                    = new CreateImageViewUrlRequestDto(
+                            ImageType.PROFILE,
+                            List.of(new CreateImageViewUrlRequestDto.ImageViewRequestInfoDto(
+                                    ImageType.PROFILE,
+                                    imageId,
+                                    1
+                            )
+                    )
+            );
+            GetImageUrlResponseDto imageViewUrl = imageService.createImageViewUrl(request);
             profileImageUrl = imageViewUrl.getImages().getFirst().url();
         }
         return new MemberInfoResponseDto(email, nickname, profileImageUrl);

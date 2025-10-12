@@ -14,6 +14,6 @@ public class GetImageUrlResponseDto {
 
     private List<ImageUrlInfoDto> images;
 
-    public record ImageUrlInfoDto(String url, LocalDateTime expiresAt) { }
+    public record ImageUrlInfoDto(String url, Integer sequence, LocalDateTime expiresAt) { }
 
 }
