@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Builder
-public class GetImageUploadUrlResponseDto {
+public class CreateImageUploadUrlResponseDto {
 
     private List<ImageUploadResponseInfoDto> images;
 

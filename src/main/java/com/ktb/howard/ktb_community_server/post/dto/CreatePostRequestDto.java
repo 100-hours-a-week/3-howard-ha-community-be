@@ -9,5 +9,5 @@ public record CreatePostRequestDto(
         String title,
         @NotBlank(message = "본문은 필수값 입니다.")
         String content,
-        List<PostImageInfo> postImages
+        List<PostImageRequestInfoDto> postImages
 ) { }
