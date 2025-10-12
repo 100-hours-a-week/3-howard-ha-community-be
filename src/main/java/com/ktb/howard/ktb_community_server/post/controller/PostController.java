@@ -3,6 +3,7 @@ package com.ktb.howard.ktb_community_server.post.controller;
 import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
 import com.ktb.howard.ktb_community_server.post.dto.CreatePostRequestDto;
 import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
+import com.ktb.howard.ktb_community_server.post.dto.GetPostsResponseDto;
 import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
 import com.ktb.howard.ktb_community_server.post.service.PostService;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -36,6 +38,16 @@ public class PostController {
         return ResponseEntity
                 .created(URI.create("/posts/" + response.postId()))
                 .body(response);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<List<GetPostsResponseDto>> getPosts(
+            @RequestParam("cursor") Long cursor,
+            @RequestParam("size") Integer size
+    ) {
+        List<GetPostsResponseDto> posts = postService.getPosts(cursor, size);
+        return ResponseEntity.ok(posts);
     }
 
     @PreAuthorize("isAuthenticated()")

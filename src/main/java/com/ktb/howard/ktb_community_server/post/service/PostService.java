@@ -9,13 +9,12 @@ import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
-import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
-import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
-import com.ktb.howard.ktb_community_server.post.dto.PostImageInfoDto;
-import com.ktb.howard.ktb_community_server.post.dto.PostImageRequestInfoDto;
+import com.ktb.howard.ktb_community_server.post.dto.*;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +66,30 @@ public class PostService {
                 post.getContent(),
                 postImages
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<GetPostsResponseDto> getPosts(Long cursor, Integer size) {
+        PageRequest pageRequest = PageRequest.of(0, size);
+        Slice<Post> posts;
+        if (cursor == 0) {
+            posts = postRepository.findPosts(pageRequest);
+        } else {
+            posts = postRepository.findPostsNextPage(cursor, pageRequest);
+        }
+        return posts.stream()
+                .map(p -> {
+                    MemberInfoResponseDto profile = memberService
+                            .getProfile(p.getWriter().getId(), p.getWriter().getEmail(), p.getWriter().getNickname());
+                    return new GetPostsResponseDto(
+                            p.getTitle(),
+                            p.getLikeCount(),
+                            p.getViewCount(),
+                            p.getCommentCount(),
+                            p.getCreatedAt(),
+                            profile
+                    );
+                }).toList();
     }
 
     @Transactional(readOnly = true)
