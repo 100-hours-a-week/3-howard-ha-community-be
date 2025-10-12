@@ -29,11 +29,12 @@ public class S3Service {
     @Value("${app.s3.put-ttl}")
     private Integer putTtl;
 
-    public UploadPresignResponse getUploadUrl(String key, String contentType) {
+    public UploadPresignResponse createUploadUrl(String key, String contentType, Integer fileSize) {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .contentType(contentType)
+                .contentLength(fileSize.longValue())
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
@@ -45,7 +46,7 @@ public class S3Service {
         return new UploadPresignResponse(presigned.url().toString(), presigned.expiration());
     }
 
-    public ViewPresignResponse getUrl(String key) {
+    public ViewPresignResponse createViewUrl(String key) {
         GetObjectRequest get = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)

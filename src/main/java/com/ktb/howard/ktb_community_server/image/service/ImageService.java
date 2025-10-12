@@ -37,6 +37,15 @@ public class ImageService {
     public CreateImageUploadUrlResponseDto createImageUploadUrl(CreateImageUploadUrlRequestDto request) {
         List<CreateImageUploadUrlResponseDto.ImageUploadResponseInfoDto> images = new ArrayList<>();
         for (CreateImageUploadUrlRequestDto.ImageUploadRequestInfoDto image : request.getImages()) {
+            // MIME Type에 대한 체크를 선행
+            String mimeType = image.mimeType().toLowerCase();
+            if (!mimeType.startsWith("image/")) {
+                throw new IllegalArgumentException("이미지 파일만 업로드가 가능합니다.");
+            }
+            // 이미지 파일 용량에 대한 체크를 선행 - 업로드 가능한 최대 이미지 용량을 1MB로 제한
+            if (image.fileSize() > 1024 * 1024) {
+                throw new IllegalStateException("이미지 파일의 용량은 1MB를 초과할 수 없습니다.");
+            }
             String temporalObjectKey = generateTemporalObjectKey(request.getImageType(), image.fileName());
             String[] tokens = temporalObjectKey.split("/");
             String reservedFileName = tokens[tokens.length - 1];
@@ -52,7 +61,7 @@ public class ImageService {
                     .status(ImageStatus.RESERVED)
                     .build();
             imageRepository.save(reserved);
-            S3Service.UploadPresignResponse uploadInfo = s3Service.getUploadUrl(temporalObjectKey, image.mimeType());
+            S3Service.UploadPresignResponse uploadInfo = s3Service.createUploadUrl(temporalObjectKey, image.mimeType(), image.fileSize());
             LocalDateTime expiresAt = uploadInfo.expiresAt()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();
@@ -74,7 +83,7 @@ public class ImageService {
         List<GetImageUrlResponseDto.ImageUrlInfoDto> images = new ArrayList<>();
         for (CreateImageViewUrlRequestDto.ImageViewRequestInfoDto image : request.getImages()) {
             String objectKey = imageRepository.findObjectKeyById(image.imageId());
-            S3Service.ViewPresignResponse urlInfo = s3Service.getUrl(objectKey);
+            S3Service.ViewPresignResponse urlInfo = s3Service.createViewUrl(objectKey);
             LocalDateTime expiresAt = urlInfo.expiresAt()
                     .atZone(ZoneId.systemDefault())
                     .toLocalDateTime();
