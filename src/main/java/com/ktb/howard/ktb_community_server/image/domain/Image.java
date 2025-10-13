@@ -61,7 +61,7 @@ public class Image extends BaseEntity {
     private String fileName;
 
     @Column(name = "file_size", nullable = false)
-    private Integer fileSize;
+    private Long fileSize;
 
     @Column(name = "mime_type", nullable = false)
     private String mimeType;
@@ -82,7 +82,7 @@ public class Image extends BaseEntity {
                  String region,
                  String objectKey,
                  String fileName,
-                 Integer fileSize,
+                 Long fileSize,
                  String mimeType,
                  Integer sequence,
                  ImageStatus status

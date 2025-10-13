@@ -19,7 +19,7 @@ public class CreateImageUploadUrlRequestDto {
     public record ImageUploadRequestInfoDto(
             ImageType imageType,
             String fileName,
-            Integer fileSize,
+            Long fileSize,
             String mimeType,
             Integer sequence
     ) { }

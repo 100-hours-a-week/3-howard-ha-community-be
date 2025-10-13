@@ -1,9 +1,14 @@
 package com.ktb.howard.ktb_community_server.infra.aws.s3.service;
 
+import com.ktb.howard.ktb_community_server.infra.aws.s3.dto.ObjectMetadata;
+import com.ktb.howard.ktb_community_server.infra.aws.s3.dto.PresignedUrl;
+import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -13,6 +18,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,61 +30,95 @@ public class S3Service {
 
     @Value("${app.s3.bucket}")
     private String bucket;
-    @Value("${app.s3.read-ttl}")
-    private Integer readTtl;
-    @Value("${app.s3.put-ttl}")
-    private Integer putTtl;
+    @Value("${app.s3.get-ttl-min}")
+    private Integer getTtlMin;
+    @Value("${app.s3.put-ttl-min}")
+    private Integer putTtlMin;
 
-    public UploadPresignResponse createUploadUrl(String key, String contentType, Integer fileSize) {
-        PutObjectRequest objectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .contentType(contentType)
-                .contentLength(fileSize.longValue())
-                .build();
-
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(readTtl))
-                .putObjectRequest(objectRequest)
-                .build();
-
-        PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
-        return new UploadPresignResponse(presigned.url().toString(), presigned.expiration());
-    }
-
-    public ViewPresignResponse createViewUrl(String key) {
-        GetObjectRequest get = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presign = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(putTtl))
-                .getObjectRequest(get)
-                .build();
-
-        PresignedGetObjectRequest req = s3Presigner.presignGetObject(presign);
-        return new ViewPresignResponse(req.url().toString(), req.expiration());
-    }
-
-    public boolean doesObjectExist(String key) {
+    public PresignedUrl createPutObjectPresignedUrl(String objectKey, String contentType, Long contentLength) {
         try {
-            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+            PutObjectRequest objectRequest = PutObjectRequest.builder()
                     .bucket(bucket)
-                    .key(key)
+                    .key(objectKey)
+                    .contentType(contentType)
+                    .contentLength(contentLength)
                     .build();
-            s3Client.headObject(headObjectRequest);
-            return true;
+
+            PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(putTtlMin))
+                    .putObjectRequest(objectRequest)
+                    .build();
+
+            PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
+            log.info("Put Object 용 Presigned URL 발급완료 : {}, {}, {}", objectKey, contentType, contentLength);
+            return new PresignedUrl(
+                    presigned.url().toString(),
+                    HttpMethod.PUT,
+                    presigned.expiration()
+            );
+        } catch (SdkException e) {
+            log.error("Put Object 용 Presigned URL 발급실패 : {}, {}, {}", objectKey, contentType, contentLength, e);
+            throw new FileStorageException("Put Object 용 Presigned URL 발급 실패. FileStorage 상태를 확인하세요.", e);
+        }
+    }
+
+    public PresignedUrl createGetObjectPresignedUrl(String objectKey) {
+        try {
+            GetObjectRequest objectRequest = GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(objectKey)
+                    .build();
+
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(getTtlMin))
+                    .getObjectRequest(objectRequest)
+                    .build();
+
+            PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
+            log.info("Get Object 용 Presigned URL 발급완료 : {}", objectKey);
+            return new PresignedUrl(
+                    presigned.url().toString(),
+                    HttpMethod.GET,
+                    presigned.expiration()
+            );
+        } catch (SdkException e) {
+            log.error("Get Object 용 Presigned URL 발급실패 : {}", objectKey, e);
+            throw new FileStorageException("Get Object 용 Presigned URL 발급 실패. FileStorage 상태를 확인하세요.", e);
+        }
+    }
+
+    public Optional<ObjectMetadata> getObjectMetaData(String objectKey) {
+        try {
+            HeadObjectRequest objectRequest = HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(objectKey)
+                    .build();
+            HeadObjectResponse response = s3Client.headObject(objectRequest);
+            log.info("ObjectKey = {}에 대응하는 Object 확인 : {}", objectKey, response);
+            return Optional.of(
+                    new ObjectMetadata(
+                            objectKey,
+                            response.contentLength(),
+                            response.contentType(),
+                            response.eTag(),
+                            response.lastModified()
+                    )
+            );
         } catch (NoSuchKeyException e) {
-            return false;
-        } catch (S3Exception e) {
-            log.error(e.getMessage());
-            throw e;
+            log.info("ObjectKey = {}에 대응하는 Object 없음", objectKey);
+            return Optional.empty();
+        } catch (SdkException e) {
+            log.error("ObjectKey = {}에 대응하는 Object 확인실패", objectKey, e);
+            throw new FileStorageException("Head Object 요청처리 실패. FileStorage 상태를 확인하세요.", e);
         }
     }
 
     public void moveObject(String sourceObjectKey, String destinationObjectKey) {
-        log.info("이미지 이동 시작 : {} -> {}", sourceObjectKey, destinationObjectKey);
+        log.info("Object 이동 시작 : {} -> {}", sourceObjectKey, destinationObjectKey);
+        if (sourceObjectKey.equals(destinationObjectKey)) {
+            log.warn("Source와 Destination ObjectKey가 동일하여 이동 작업을 중단: {}", sourceObjectKey);
+            return;
+        }
         try {
             CopyObjectRequest copyRequest = CopyObjectRequest.builder()
                     .sourceBucket(bucket)
@@ -87,20 +127,17 @@ public class S3Service {
                     .destinationKey(destinationObjectKey)
                     .build();
             s3Client.copyObject(copyRequest);
-            log.info("이미지 복사 완료 : {}", destinationObjectKey);
+            log.info("Object 복사 완료 : {} -> {}", sourceObjectKey, destinationObjectKey);
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                     .bucket(bucket)
                     .key(sourceObjectKey)
                     .build();
             s3Client.deleteObject(deleteRequest);
-            log.info("이미지 삭제 완료 : {}", sourceObjectKey);
-        } catch (S3Exception e) {
-            log.error("이미지 이동 중 오류 발생: {}", e.awsErrorDetails().errorMessage());
-            throw new RuntimeException("이미지 이동 실패", e);
+            log.info("Object 삭제 완료 : {}", sourceObjectKey);
+        } catch (SdkException e) {
+            log.error("Object 이동 실패 {} -> {}", sourceObjectKey, destinationObjectKey, e);
+            throw new FileStorageException("Object 이동 요청처리 실패. FileStorage 상태를 확인하세요.", e);
         }
     }
-
-    public record UploadPresignResponse(String url, java.time.Instant expiresAt) {}
-    public record ViewPresignResponse(String url, java.time.Instant expiresAt) {}
 
 }

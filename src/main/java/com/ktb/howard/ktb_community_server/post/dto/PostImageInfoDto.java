@@ -1,5 +1,5 @@
 package com.ktb.howard.ktb_community_server.post.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-public record PostImageInfoDto(String postImageUrl, Integer sequence, LocalDateTime expiresAt) { }
+public record PostImageInfoDto(String postImageUrl, Integer sequence, Instant expiresAt) { }

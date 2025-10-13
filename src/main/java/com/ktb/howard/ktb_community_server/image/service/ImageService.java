@@ -5,6 +5,7 @@ import com.ktb.howard.ktb_community_server.image.domain.ImageStatus;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.*;
 import com.ktb.howard.ktb_community_server.image.repository.ImageRepository;
+import com.ktb.howard.ktb_community_server.infra.aws.s3.dto.PresignedUrl;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.service.S3Service;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -61,15 +60,12 @@ public class ImageService {
                     .status(ImageStatus.RESERVED)
                     .build();
             imageRepository.save(reserved);
-            S3Service.UploadPresignResponse uploadInfo = s3Service.createUploadUrl(temporalObjectKey, image.mimeType(), image.fileSize());
-            LocalDateTime expiresAt = uploadInfo.expiresAt()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
+            PresignedUrl uploadInfo = s3Service.createPutObjectPresignedUrl(temporalObjectKey, image.mimeType(), image.fileSize());
             images.add(
                     new CreateImageUploadUrlResponseDto.ImageUploadResponseInfoDto(
-                            uploadInfo.url(),
+                            uploadInfo.presignedUrl(),
                             reserved.getId(),
-                            expiresAt
+                            uploadInfo.expiresAt()
                     )
             );
         }
@@ -83,11 +79,8 @@ public class ImageService {
         List<GetImageUrlResponseDto.ImageUrlInfoDto> images = new ArrayList<>();
         for (CreateImageViewUrlRequestDto.ImageViewRequestInfoDto image : request.getImages()) {
             String objectKey = imageRepository.findObjectKeyById(image.imageId());
-            S3Service.ViewPresignResponse urlInfo = s3Service.createViewUrl(objectKey);
-            LocalDateTime expiresAt = urlInfo.expiresAt()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
-            images.add(new GetImageUrlResponseDto.ImageUrlInfoDto(urlInfo.url(), image.sequence(), expiresAt));
+            PresignedUrl urlInfo = s3Service.createGetObjectPresignedUrl(objectKey);
+            images.add(new GetImageUrlResponseDto.ImageUrlInfoDto(urlInfo.presignedUrl(), image.sequence(), urlInfo.expiresAt()));
         }
         return GetImageUrlResponseDto.builder()
                 .images(images)
@@ -102,7 +95,7 @@ public class ImageService {
             throw new IllegalArgumentException("imageId가 존재하지 않는 값으로, objectKey 생성 실패...");
         }
         log.info("objectKey : {}", objectKey);
-        return s3Service.doesObjectExist(objectKey);
+        return s3Service.getObjectMetaData(objectKey).isPresent();
     }
 
     @Transactional
