@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @AllArgsConstructor
@@ -17,7 +17,7 @@ public class CreateImageUploadUrlResponseDto {
     public record ImageUploadResponseInfoDto(
             String url,
             Long reservedId,
-            LocalDateTime expiresAt
+            Instant expiresAt
     ) { }
 
 }

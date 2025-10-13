@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
 import jakarta.validation.ConstraintViolationException;
@@ -54,6 +55,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AlreadyUsedNicknameException.class)
     public ResponseEntity<String> handleNicknameConflictException(AlreadyUsedNicknameException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<String> handleFileStorageException(FileStorageException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
