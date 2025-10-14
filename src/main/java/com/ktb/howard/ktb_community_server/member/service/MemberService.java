@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.member.service;
 
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
+import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
@@ -14,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,7 +67,11 @@ public class MemberService {
                 ImageType.PROFILE,
                 memberId.longValue()
         );
-        String profileImageUrl = imageService.createImageViewUrl(request).getFirst().url();
+        String profileImageUrl = null;
+        List<ImageUrlResponseDto> response = imageService.createImageViewUrl(request);
+        if (!response.isEmpty()) {
+            profileImageUrl = response.getFirst().url();
+        }
         return new MemberInfoResponseDto(email, nickname, profileImageUrl);
     }
 
