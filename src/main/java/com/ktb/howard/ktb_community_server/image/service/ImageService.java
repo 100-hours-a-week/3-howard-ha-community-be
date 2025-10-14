@@ -1,9 +1,11 @@
 package com.ktb.howard.ktb_community_server.image.service;
 
+import com.google.common.base.Strings;
 import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.domain.ImageStatus;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.*;
+import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.image.repository.ImageRepository;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.dto.PresignedUrl;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.service.S3Service;
@@ -13,11 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.google.common.io.Files;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,58 +33,81 @@ public class ImageService {
     private String region;
 
     @Transactional
-    public CreateImageUploadUrlResponseDto createImageUploadUrl(CreateImageUploadUrlRequestDto request) {
-        List<CreateImageUploadUrlResponseDto.ImageUploadResponseInfoDto> images = new ArrayList<>();
-        for (CreateImageUploadUrlRequestDto.ImageUploadRequestInfoDto image : request.getImages()) {
+    public Image createImage(ImageType type, ImageMetadata metadata, ImageStatus status) {
+        GenerateObjectKeyResponse objectKey = generateObjectKey(type, metadata.fileName(), status);
+        Image image = Image.builder()
+                .imageType(type)
+                .bucketName(bucketName)
+                .region(region)
+                .objectKey(objectKey.objectKey())
+                .fileName(objectKey.fileName())
+                .fileSize(metadata.fileSize())
+                .mimeType(metadata.mimeType())
+                .sequence(metadata.sequence())
+                .status(status)
+                .build();
+        imageRepository.save(image);
+        return image;
+    }
+
+    @Transactional
+    public List<ImageUrlResponseDto> createImageUploadUrl(CreateImageUploadUrlRequestDto request) {
+        List<ImageUrlResponseDto> response = new ArrayList<>();
+        // 업로드를 시도하는 최대 이미지 갯수에 대한 체크를 선행 - PROFILE: 1장, POST: 5장으로 제한
+        int imageCount = request.getImageMetadataList().size();
+        if (ImageType.PROFILE.equals(request.getImageType()) && imageCount > 1
+                || ImageType.POST.equals(request.getImageType()) && imageCount > 5) {
+            log.error("이미지 수량한도 초과! : 유형={}, 수량={}", request.getImageType(), imageCount);
+            throw new InvalidImageCountException("프로필 이미지는 최대 1장, 게시글 이미지는 최대 5장까지 가능합니다.");
+        }
+        for (ImageMetadata image : request.getImageMetadataList()) {
             // MIME Type에 대한 체크를 선행
             String mimeType = image.mimeType().toLowerCase();
             if (!mimeType.startsWith("image/")) {
-                throw new IllegalArgumentException("이미지 파일만 업로드가 가능합니다.");
+                log.error("지원하지 않는 파일 형식 : mimeType={}", mimeType);
+                throw new InvalidMimeTypeException("지원하지 않는 파일 형식입니다.", image.mimeType());
             }
             // 이미지 파일 용량에 대한 체크를 선행 - 업로드 가능한 최대 이미지 용량을 1MB로 제한
             if (image.fileSize() > 1024 * 1024) {
-                throw new IllegalStateException("이미지 파일의 용량은 1MB를 초과할 수 없습니다.");
+                log.error("이미지 용량 한도 초과! : 현재 용량={}byte", image.fileSize());
+                throw new ImageSizeExceededException(
+                        "이미지 파일의 용량은 1MB를 초과할 수 없습니다.",
+                        image.fileSize(),
+                        image.mimeType()
+                );
             }
-            String temporalObjectKey = generateTemporalObjectKey(request.getImageType(), image.fileName());
-            String[] tokens = temporalObjectKey.split("/");
-            String reservedFileName = tokens[tokens.length - 1];
-            Image reserved = Image.builder()
-                    .imageType(request.getImageType())
-                    .bucketName(bucketName)
-                    .region(region)
-                    .objectKey(temporalObjectKey)
-                    .fileName(reservedFileName)
-                    .fileSize(image.fileSize())
-                    .mimeType(image.mimeType())
-                    .sequence(image.sequence())
-                    .status(ImageStatus.RESERVED)
-                    .build();
-            imageRepository.save(reserved);
-            PresignedUrl uploadInfo = s3Service.createPutObjectPresignedUrl(temporalObjectKey, image.mimeType(), image.fileSize());
-            images.add(
-                    new CreateImageUploadUrlResponseDto.ImageUploadResponseInfoDto(
-                            uploadInfo.presignedUrl(),
-                            reserved.getId(),
-                            uploadInfo.expiresAt()
-                    )
+            Image createdImage = createImage(request.getImageType(), image, ImageStatus.RESERVED);
+            PresignedUrl presignedUrl = s3Service.createPutObjectPresignedUrl(
+                    createdImage.getObjectKey(),
+                    createdImage.getMimeType(),
+                    createdImage.getFileSize()
             );
+            response.add(new ImageUrlResponseDto(
+                    presignedUrl.presignedUrl(),
+                    createdImage.getId(),
+                    createdImage.getSequence(),
+                    presignedUrl.httpMethod(),
+                    presignedUrl.expiresAt()
+            ));
         }
-        return CreateImageUploadUrlResponseDto.builder()
-                .images(images)
-                .build();
+        return response;
     }
 
     @Transactional(readOnly = true)
-    public GetImageUrlResponseDto createImageViewUrl(CreateImageViewUrlRequestDto request) {
-        List<GetImageUrlResponseDto.ImageUrlInfoDto> images = new ArrayList<>();
-        for (CreateImageViewUrlRequestDto.ImageViewRequestInfoDto image : request.getImages()) {
-            String objectKey = imageRepository.findObjectKeyById(image.imageId());
-            PresignedUrl urlInfo = s3Service.createGetObjectPresignedUrl(objectKey);
-            images.add(new GetImageUrlResponseDto.ImageUrlInfoDto(urlInfo.presignedUrl(), image.sequence(), urlInfo.expiresAt()));
-        }
-        return GetImageUrlResponseDto.builder()
-                .images(images)
-                .build();
+    public List<ImageUrlResponseDto> createImageViewUrl(CreateImageViewUrlRequestDto request) {
+        return imageRepository.findImageByImageTypeAndReferenceId(request.getImageType(), request.getReferenceId())
+                .stream()
+                .map(image -> {
+                    PresignedUrl presignedUrl = s3Service.createGetObjectPresignedUrl(image.getObjectKey());
+                    return new ImageUrlResponseDto(
+                            presignedUrl.presignedUrl(),
+                            image.getId(),
+                            image.getSequence(),
+                            presignedUrl.httpMethod(),
+                            presignedUrl.expiresAt()
+                    );
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -102,50 +125,42 @@ public class ImageService {
     public void persistImage(Long imageId, Member owner, Long referenceId) {
         Optional<Image> imageOpt = imageRepository.findById(imageId);
         if (imageOpt.isEmpty()) {
-            throw new IllegalStateException("존재하지 않는 이미지입니다.");
+            log.error("존재하지 않은 이미지: imageId={}, ownerId={}, referenceId={}", imageId, owner.getId(), referenceId);
+            throw new ImageNotFoundException("존재하지 않는 이미지입니다.", imageId, referenceId);
         }
         Image image = imageOpt.get();
-        String persistObjectKey;
-        if (ImageType.PROFILE.equals(image.getImageType())) {
-            persistObjectKey = "profiles/" + image.getId() + "/" + image.getFileName();
-        } else if (ImageType.POST.equals(image.getImageType())) {
-            persistObjectKey = "posts/" + image.getId() + "/" + image.getFileName();
-        } else {
-            log.error("유효하지 않은 이미지 타입 : {}", image.getImageType());
-            throw new IllegalStateException("이미지 타입이 유효하지 않습니다.");
-        }
-        s3Service.moveObject(image.getObjectKey(), persistObjectKey);
+        GenerateObjectKeyResponse persistObjectKey = generateObjectKey(
+                image.getImageType(),
+                image.getFileName(),
+                ImageStatus.PERSIST
+        );
+        s3Service.moveObject(image.getObjectKey(), persistObjectKey.objectKey());
         image.updateOwner(owner);
         image.updateReference(referenceId);
-        image.updateObjectKey(persistObjectKey);
+        image.updateObjectKey(persistObjectKey.objectKey());
         image.updateStatus(ImageStatus.PERSIST);
-        imageRepository.save(image);
     }
 
-    @Transactional(readOnly = true)
-    public Long getMemberProfileImageId(Integer memberId) {
-        return imageRepository.findImageIdByImageTypeAndOwner(ImageType.PROFILE, memberId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Image> getPostImageByPostId(Long postId) {
-        return imageRepository.findImageByImageTypeAndReferenceId(ImageType.POST, postId);
-    }
-
-    private String generateTemporalObjectKey(ImageType imageType, String originalFileName) {
-        String temporalObjectKey;
-        String extension = "";
-        int dot = originalFileName.lastIndexOf('.');
-        if (dot > -1) extension = originalFileName.substring(dot);
-        if (ImageType.PROFILE.equals(imageType)) {
-            temporalObjectKey = "tmp/profiles";
-        } else if (ImageType.POST.equals(imageType)) {
-            temporalObjectKey = "tmp/posts";
-        } else {
-            log.error("유효하지 않은 이미지 타입 : {}", imageType);
-            throw new IllegalStateException("이미지 타입이 유효하지 않습니다.");
+    public GenerateObjectKeyResponse generateObjectKey(ImageType imageType, String originalFileName, ImageStatus status) {
+        String objectKey;
+        String fileName;
+        String extension = Files.getFileExtension(originalFileName);
+        if (Strings.isNullOrEmpty(extension)) {
+            log.error("파일 확장자 추출 실패 : {}", originalFileName);
+            throw new FileExtensionExtractionFailedException("확장자 추출 실패 -> " + originalFileName, originalFileName);
         }
-        return temporalObjectKey + "/" + UUID.randomUUID() + extension;
+        if (ImageStatus.RESERVED.equals(status)) {
+            fileName = UUID.randomUUID() + "." + extension;
+            objectKey = (ImageType.PROFILE.equals(imageType) ? "tmp/profiles/" : "tmp/posts/") + fileName;
+        } else if (ImageStatus.PERSIST.equals(status)) {
+            fileName = originalFileName;
+            objectKey = (ImageType.PROFILE.equals(imageType) ? "profiles/" : "posts/") + fileName;
+        } else {
+            log.error("Object Key 생성 불가 상태값 = {}", status.toString());
+            throw new InvalidImageStatusException("Object Key 생성을 할 수 있는 상태값이 아닙니다.", status);
+        }
+        log.info("ObjectKey 생성 : fileName={}, objectKey={}", fileName, objectKey);
+        return new GenerateObjectKeyResponse(objectKey, fileName);
     }
 
 }

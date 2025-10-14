@@ -2,7 +2,6 @@ package com.ktb.howard.ktb_community_server.member.service;
 
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
-import com.ktb.howard.ktb_community_server.image.dto.GetImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
@@ -15,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -63,22 +60,11 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public MemberInfoResponseDto getProfile(Integer memberId, String email, String nickname) {
-        Long imageId = imageService.getMemberProfileImageId(memberId);
-        String profileImageUrl = null;
-        if (imageId != null) {
-            CreateImageViewUrlRequestDto request
-                    = new CreateImageViewUrlRequestDto(
-                            ImageType.PROFILE,
-                            List.of(new CreateImageViewUrlRequestDto.ImageViewRequestInfoDto(
-                                    ImageType.PROFILE,
-                                    imageId,
-                                    1
-                            )
-                    )
-            );
-            GetImageUrlResponseDto imageViewUrl = imageService.createImageViewUrl(request);
-            profileImageUrl = imageViewUrl.getImages().getFirst().url();
-        }
+        CreateImageViewUrlRequestDto request = new CreateImageViewUrlRequestDto(
+                ImageType.PROFILE,
+                memberId.longValue()
+        );
+        String profileImageUrl = imageService.createImageViewUrl(request).getFirst().url();
         return new MemberInfoResponseDto(email, nickname, profileImageUrl);
     }
 

@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
@@ -59,6 +60,36 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FileStorageException.class)
     public ResponseEntity<String> handleFileStorageException(FileStorageException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(FileExtensionExtractionFailedException.class)
+    public ResponseEntity<String> handleFileExtensionExtractionException(FileExtensionExtractionFailedException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ImageSizeExceededException.class)
+    public ResponseEntity<String> handleImageSizeExceededException(ImageSizeExceededException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidImageCountException.class)
+    public ResponseEntity<String> handleInvalidImageCountException(InvalidImageCountException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidImageStatusException.class)
+    public ResponseEntity<String> handleInvalidImageStatusException(InvalidImageStatusException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidMimeTypeException.class)
+    public ResponseEntity<String> handleInvalidMimeTypeException(InvalidMimeTypeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<String> handleImageNotFoundException(ImageNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

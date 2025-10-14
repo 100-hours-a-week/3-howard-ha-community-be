@@ -2,7 +2,7 @@ package com.ktb.howard.ktb_community_server.post.service;
 
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
-import com.ktb.howard.ktb_community_server.image.dto.GetImageUrlResponseDto;
+import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import static com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -98,14 +96,11 @@ public class PostService {
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
         Member writer = post.getWriter();
         MemberInfoResponseDto profile = memberService.getProfile(writer.getId(), writer.getEmail(), writer.getNickname());
-        List<ImageViewRequestInfoDto> request = imageService.getPostImageByPostId(postId).stream()
-                .map(i -> new ImageViewRequestInfoDto(i.getImageType(), i.getId(), i.getSequence()))
-                .toList();
-        GetImageUrlResponseDto imageViewUrl = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(
+        List<ImageUrlResponseDto> response = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(
                 ImageType.POST,
-                request
+                postId
         ));
-        List<PostImageInfoDto> postImages = imageViewUrl.getImages().stream()
+        List<PostImageInfoDto> postImages = response.stream()
                 .map(pi -> new PostImageInfoDto(pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
         return PostDetailDto.builder()
