@@ -48,6 +48,8 @@ dependencies {
     /* AWS S3 */
     implementation platform('software.amazon.awssdk:bom:2.26.25')
     implementation 'software.amazon.awssdk:s3'
+    /* Guava */
+    implementation 'com.google.guava:guava:33.5.0-jre'
 }
 
 tasks.withType(Test).configureEach {

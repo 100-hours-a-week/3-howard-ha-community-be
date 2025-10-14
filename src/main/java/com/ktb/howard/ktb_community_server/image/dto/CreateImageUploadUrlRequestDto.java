@@ -14,14 +14,6 @@ public class CreateImageUploadUrlRequestDto {
 
     private ImageType imageType;
 
-    private List<ImageUploadRequestInfoDto> images;
-
-    public record ImageUploadRequestInfoDto(
-            ImageType imageType,
-            String fileName,
-            Long fileSize,
-            String mimeType,
-            Integer sequence
-    ) { }
+    private List<ImageMetadata> imageMetadataList;
 
 }
