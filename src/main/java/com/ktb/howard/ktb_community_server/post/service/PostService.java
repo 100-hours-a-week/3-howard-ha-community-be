@@ -1,5 +1,7 @@
 package com.ktb.howard.ktb_community_server.post.service;
 
+import com.ktb.howard.ktb_community_server.cache.repository.LikeCountCacheRepository;
+import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheRepository;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
 import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
@@ -31,6 +33,8 @@ public class PostService {
     private final MemberService memberService;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final LikeCountCacheRepository likeCountCacheRepository;
+    private final ViewCountCacheRepository viewCountCacheRepository;
 
     @Transactional
     public CreatePostResponseDto createPost(
@@ -81,8 +85,8 @@ public class PostService {
                             .getProfile(p.getWriter().getId(), p.getWriter().getEmail(), p.getWriter().getNickname());
                     return new GetPostsResponseDto(
                             p.getTitle(),
-                            p.getLikeCount(),
-                            p.getViewCount(),
+                            likeCountCacheRepository.get(p.getId()).intValue(),
+                            viewCountCacheRepository.get(p.getId()),
                             p.getCommentCount(),
                             p.getCreatedAt(),
                             profile
@@ -103,14 +107,15 @@ public class PostService {
         List<PostImageInfoDto> postImages = response.stream()
                 .map(pi -> new PostImageInfoDto(pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
+        viewCountCacheRepository.increaseCount(postId); // Cache에 조회수 갱신
         return PostDetailDto.builder()
                 .postId(postId)
                 .writer(profile)
                 .postImages(postImages)
                 .title(post.getTitle())
                 .content(post.getContent())
-                .likeCount(post.getLikeCount())
-                .viewCount(post.getViewCount())
+                .likeCount(likeCountCacheRepository.get(postId).intValue())
+                .viewCount(viewCountCacheRepository.get(postId))
                 .commentCount(post.getCommentCount())
                 .createdAt(post.getCreatedAt())
                 .build();
@@ -123,6 +128,8 @@ public class PostService {
         if (!loginMemberId.equals(findPost.getWriter().getId())) {
             throw new AccessDeniedException("올바르지 않은 요청입니다.");
         }
+        likeCountCacheRepository.remove(postId); // 좋아요 수 캐시에서 해당 post 제거
+        viewCountCacheRepository.remove(postId); // 조회수 캐시에서 해당 post 제거
         postRepository.deleteById(postId);
     }
 

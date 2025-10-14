@@ -1,5 +1,7 @@
 package com.ktb.howard.ktb_community_server.post.service;
 
+import com.ktb.howard.ktb_community_server.cache.repository.LikeCountCacheRepository;
+import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheRepository;
 import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.domain.ImageStatus;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
@@ -11,6 +13,7 @@ import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
 import com.ktb.howard.ktb_community_server.post.dto.GetPostsResponseDto;
 import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,19 @@ class PostServiceTest {
 
     @Autowired
     ImageRepository imageRepository;
+
+    @Autowired
+    LikeCountCacheRepository likeCountCacheRepository;
+
+    @Autowired
+    ViewCountCacheRepository viewCountCacheRepository;
+
+    @BeforeEach
+    void init() {
+        // 좋아요, 조회 수 정보 캐시 초기화
+        likeCountCacheRepository.clearCache();
+        viewCountCacheRepository.clearCache();
+    }
 
     @Test
     @DisplayName("게시글 생성 - 게시글 이미지를 첨부하지 않은 경우")
@@ -303,7 +319,7 @@ class PostServiceTest {
         assertThat(response.getTitle()).isEqualTo(post.getTitle());
         assertThat(response.getContent()).isEqualTo(post.getContent());
         assertThat(response.getLikeCount()).isZero();
-        assertThat(response.getViewCount()).isZero();
+        assertThat(response.getViewCount()).isOne();
         assertThat(response.getCommentCount()).isZero();
         assertThat(response.getCreatedAt()).isEqualTo(post.getCreatedAt());
         assertThat(response.getWriter())
