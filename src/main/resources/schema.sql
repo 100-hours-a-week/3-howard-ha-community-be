@@ -59,6 +59,18 @@ CREATE TABLE IF NOT EXISTS like_log (
 ## Index 설정
 CREATE INDEX idx_like_log_post_member_type_created ON like_log (post_id, member_id, type, created_at);
 
+CREATE TABLE IF NOT EXISTS post_like (
+    post_like_id BIGINT	    NOT NULL AUTO_INCREMENT	           COMMENT '게시글 좋아요 상태에 부여되는 ID',
+    member_id	 INT	    NOT NULL	                       COMMENT '좋아요를 클릭한 회원의 ID',
+    post_id	     BIGINT	    NOT NULL	                       COMMENT '좋아요를 받은 게시글의 ID',
+    created_at	 TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '좋아요 기록을 생성한 일자, 시각',
+
+    PRIMARY KEY (post_like_id),
+    UNIQUE (member_id, post_id),
+    FOREIGN KEY (member_id) REFERENCES member (member_id),
+    FOREIGN KEY (post_id) REFERENCES post (post_id)
+) COMMENT = '게시글 좋아요 상태';
+
 CREATE TABLE IF NOT EXISTS view_log (
     view_log_id	BIGINT	  NOT NULL AUTO_INCREMENT            COMMENT '조회 기록에 부여되는 ID',
     member_id	INT	      NOT NULL	                         COMMENT '조회한 회원의 ID',
