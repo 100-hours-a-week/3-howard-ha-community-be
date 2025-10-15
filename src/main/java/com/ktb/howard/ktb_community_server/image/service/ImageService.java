@@ -186,6 +186,11 @@ public class ImageService {
     }
 
     @Transactional(readOnly = true)
+    public List<Image> findImages(ImageType imageType, Long referenceId) {
+        return imageRepository.findImageByImageTypeAndReferenceId(imageType, referenceId);
+    }
+
+    @Transactional(readOnly = true)
     public List<Long> findImageIds(ImageType imageType, Long referenceId) {
         return imageRepository.findImageIdByImageTypeAndReferenceId(imageType, referenceId);
     }

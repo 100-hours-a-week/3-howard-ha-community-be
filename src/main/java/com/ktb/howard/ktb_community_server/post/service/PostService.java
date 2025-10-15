@@ -1,7 +1,9 @@
 package com.ktb.howard.ktb_community_server.post.service;
 
+import com.google.common.base.Strings;
 import com.ktb.howard.ktb_community_server.cache.repository.LikeCountCacheRepository;
 import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheRepository;
+import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
 import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
@@ -14,6 +16,7 @@ import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.*;
+import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
 import com.ktb.howard.ktb_community_server.post_like.service.PostLikeService;
@@ -26,8 +29,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -142,6 +146,66 @@ public class PostService {
         } else {
             log.error("유효하지 않은 좋아요 로그 타입 : {}", type);
             throw new InvalidLikeLogTypeException("유효하지 않은 좋아요 로그 타입입니다.");
+        }
+    }
+
+    @Transactional
+    public void updatePost(
+            Integer loginMemberId,
+            Long postId,
+            String title,
+            String content,
+            List<PostImageRequestInfoDto> requestImages
+    ) {
+        // 1. 수정할 대상인 게시글 정보를 불러옴
+        Post post = postRepository.findById(postId).orElseThrow(() -> {
+            log.error("수정할 게시글을 찾을 수 없음 : postId={}", postId);
+            return new PostNotFoundException("수정할 게시글을 찾을 수 없습니다.");
+        });
+        // 2. 현재 요청자가 해당 게시글을 수정할 권한이 있는 지 확인
+        if (!loginMemberId.equals(post.getWriter().getId())) {
+            log.error("올바르지 않은 요청 : loginMemberId={}, postWriterId={}", loginMemberId, post.getWriter().getId());
+            throw new AccessDeniedException("올바르지 않은 요청입니다.");
+        }
+        // 3. 제목에 대한 변경요청이 있는 경우 업데이트를 진행함
+        if (!Strings.isNullOrEmpty(title)) {
+            post.updateTitle(title);
+        }
+        // 4. 본문에 대한 변경요청이 있는 경우 업데이트를 진행함
+        if (!Strings.isNullOrEmpty(content)) {
+            post.updateContent(content);
+        }
+        // 5. 게시글 이미지에 대한 변경 요청이 있는 경우 업데이트를 진행함
+        if (requestImages != null) {
+            // 5-1. 기존 이미지들을 ID를 Key로 하는 Map으로 변환
+            Map<Long, Image> existingImageMap = imageService.findImages(ImageType.POST, postId).stream()
+                    .collect(Collectors.toMap(Image::getId, Function.identity()));
+
+            // 3-2. 요청된 이미지 ID Set 생성 (삭제 대상 식별용)
+            Set<Long> requestImageIds = requestImages.stream()
+                    .map(PostImageRequestInfoDto::imageId)
+                    .collect(Collectors.toSet());
+
+            // 3-3. 삭제 대상 처리 (기존 이미지 중 요청에 없는 것)
+            existingImageMap.keySet().stream()
+                    .filter(existingId -> !requestImageIds.contains(existingId))
+                    .forEach(imageService::deleteImage); // imageId로 soft-delete
+
+            // 3-4. 추가 및 순서 변경 처리
+            for (PostImageRequestInfoDto requestImage : requestImages) {
+                Long imageId = requestImage.imageId();
+                Integer newSequence = requestImage.sequence();
+                Image existingImage = existingImageMap.get(imageId);
+                if (existingImage != null) {
+                    // 수정 대상: 순서가 변경되었다면 업데이트
+                    if (!existingImage.getSequence().equals(newSequence)) {
+                        existingImage.updateSequence(newSequence);
+                    }
+                } else {
+                    // 추가 대상: 이미지를 영속화하고 게시글과 연결
+                    imageService.persistImage(imageId, post.getWriter(), loginMemberId.longValue());
+                }
+            }
         }
     }
 
