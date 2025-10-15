@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
                 columnList = "post_id, member_id, type, created_at"
         )
 )
-public class likeLog {
+public class LikeLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,7 +45,7 @@ public class likeLog {
     private LocalDateTime createdAt;
 
     @Builder
-    public likeLog(Member member, Post post, LikeLogType type) {
+    public LikeLog(Member member, Post post, LikeLogType type) {
         this.member = member;
         this.post = post;
         this.type = type;

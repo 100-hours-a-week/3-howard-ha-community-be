@@ -311,8 +311,7 @@ class PostServiceTest {
         imageRepository.save(image2);
 
         // when
-        PostDetailDto response = postService.getPostDetail(post.getId());
-        System.out.println("response = " + response);
+        PostDetailDto response = postService.getPostDetail(post.getId(), writer.getId());
 
         // then
         assertThat(response.getPostId()).isEqualTo(post.getId());
@@ -334,7 +333,7 @@ class PostServiceTest {
         // given
 
         // when // then
-        assertThatThrownBy(() -> postService.getPostDetail(1L))
+        assertThatThrownBy(() -> postService.getPostDetail(1L, 1))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 게시글입니다.");
     }

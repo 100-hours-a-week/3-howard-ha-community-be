@@ -1,10 +1,8 @@
 package com.ktb.howard.ktb_community_server.post.controller;
 
 import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
-import com.ktb.howard.ktb_community_server.post.dto.CreatePostRequestDto;
-import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
-import com.ktb.howard.ktb_community_server.post.dto.GetPostsResponseDto;
-import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
+import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
+import com.ktb.howard.ktb_community_server.post.dto.*;
 import com.ktb.howard.ktb_community_server.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,9 +50,23 @@ public class PostController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDetailDto> getPostDetail(@PathVariable Long postId) {
-        PostDetailDto response = postService.getPostDetail(postId);
+    public ResponseEntity<PostDetailDto> getPostDetail(
+            @AuthenticationPrincipal CustomUser loginMember,
+            @PathVariable Long postId
+    ) {
+        PostDetailDto response = postService.getPostDetail(postId, loginMember.getId());
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/like/{postId}")
+    public ResponseEntity<String> likePost(
+            @AuthenticationPrincipal CustomUser loginMember,
+            @PathVariable Long postId,
+            @RequestParam("type") LikeLogType type
+    ) {
+        postService.likePost(postId, loginMember.getId(), type);
+        return ResponseEntity.ok("");
     }
 
     @PreAuthorize("isAuthenticated()")
