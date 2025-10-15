@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @RequiredArgsConstructor
@@ -70,6 +71,18 @@ public class CommentService {
                     ).getFirst().url();
                     return new CommentResponseDto(c, profileImageUrl);
                 });
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommentResponseDto> getChildComments(Long parentCommentId) {
+        return commentRepository.findByParentCommentId(parentCommentId).stream()
+                .map(c -> {
+                    String profileImageUrl = imageService.createImageViewUrl(
+                            new CreateImageViewUrlRequestDto(ImageType.PROFILE, c.getMember().getId().longValue())
+                    ).getFirst().url();
+                    return new CommentResponseDto(c, profileImageUrl);
+                })
+                .toList();
     }
 
     @Transactional
