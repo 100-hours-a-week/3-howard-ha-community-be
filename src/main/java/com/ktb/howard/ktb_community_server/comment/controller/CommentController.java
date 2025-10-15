@@ -1,12 +1,16 @@
 package com.ktb.howard.ktb_community_server.comment.controller;
 
 import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
+import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.UpdateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,13 +20,13 @@ import java.net.URI;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/comments")
+@RequestMapping("/posts")
 public class CommentController {
 
     private final CommentService commentService;
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping
+    @PostMapping("/comments")
     public ResponseEntity<CreateCommentResponseDto> createComment(
             @AuthenticationPrincipal CustomUser loginMember,
             @Valid @RequestBody CreateCommentRequestDto request
@@ -39,7 +43,17 @@ public class CommentController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PatchMapping("/{commentId}")
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<Page<CommentResponseDto>> getComments(
+            @PathVariable Long postId,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<CommentResponseDto> comments = commentService.getComments(postId, pageable);
+        return ResponseEntity.ok(comments);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/comments/{commentId}")
     public ResponseEntity<String> updateComment(
             @AuthenticationPrincipal CustomUser loginMember,
             @PathVariable Long commentId,
@@ -50,7 +64,7 @@ public class CommentController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping("/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<String> deleteComment(
             @AuthenticationPrincipal CustomUser loginMember,
             @PathVariable Long commentId
