@@ -38,16 +38,17 @@ public class likeLog {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private LikeLogType type = LikeLogType.LIKE;
+    private LikeLogType type;
 
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Builder
-    public likeLog(Member member, Post post) {
+    public likeLog(Member member, Post post, LikeLogType type) {
         this.member = member;
         this.post = post;
+        this.type = type;
     }
 
 }
