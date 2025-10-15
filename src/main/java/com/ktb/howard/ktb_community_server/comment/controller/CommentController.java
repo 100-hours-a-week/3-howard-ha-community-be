@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -50,6 +51,13 @@ public class CommentController {
     ) {
         Page<CommentResponseDto> comments = commentService.getComments(postId, pageable);
         return ResponseEntity.ok(comments);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/comments/{commentId}")
+    public ResponseEntity<List<CommentResponseDto>> getChildComments(@PathVariable Long commentId) {
+        List<CommentResponseDto> response = commentService.getChildComments(commentId);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("isAuthenticated()")
