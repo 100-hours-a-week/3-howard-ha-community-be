@@ -1,6 +1,5 @@
 package com.ktb.howard.ktb_community_server.cache.repository;
 
-import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.CountInfoDto;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +39,12 @@ public class LikeCountCacheRepository {
     public void increaseCount(Long postId) {
         log.info("LikeCountCache 카운트 증가 : postId={}", postId);
         cache.computeIfAbsent(postId, c -> getCountWhenCacheMiss(postId)).incrementAndGet();
+    }
+
+    @Transactional
+    public void decreaseCount(Long postId) {
+        log.info("LikeCountCache 카운트 감소 : postId={}", postId);
+        cache.computeIfAbsent(postId, c -> getCountWhenCacheMiss(postId)).decrementAndGet();
     }
 
     public void remove(Long postId) {

@@ -4,6 +4,7 @@ import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -39,5 +40,11 @@ public class PostLike {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Builder
+    public PostLike(Member member, Post post) {
+        this.member = member;
+        this.post = post;
+    }
 
 }

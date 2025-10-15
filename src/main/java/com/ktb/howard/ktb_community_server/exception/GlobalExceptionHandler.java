@@ -4,6 +4,11 @@ import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
+import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
+import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
+import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
+import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeAlreadyExistException;
+import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -91,6 +96,31 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ImageNotFoundException.class)
     public ResponseEntity<String> handleImageNotFoundException(ImageNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(PostNotFoundException.class)
+    public ResponseEntity<String> handlePostNotFoundException(PostNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<String> handleMemberNotFoundException(MemberNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidLikeLogTypeException.class)
+    public ResponseEntity<String> handleInvalidLikeLogTypeException(InvalidLikeLogTypeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PostLikeNotFoundException.class)
+    public ResponseEntity<String> handlePostLikeNotFoundException(PostLikeNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PostLikeAlreadyExistException.class)
+    public ResponseEntity<String> handlePostLikeAlreadyExistException(PostLikeAlreadyExistException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
 }

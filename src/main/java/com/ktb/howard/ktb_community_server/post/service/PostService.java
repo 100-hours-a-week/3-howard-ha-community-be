@@ -6,6 +6,8 @@ import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
 import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
+import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
+import com.ktb.howard.ktb_community_server.like_log.service.LikeLogService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
@@ -13,6 +15,9 @@ import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.*;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
+import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
+import com.ktb.howard.ktb_community_server.post_like.service.PostLikeService;
+import com.ktb.howard.ktb_community_server.view_log.service.ViewLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -31,10 +36,13 @@ public class PostService {
 
     private final ImageService imageService;
     private final MemberService memberService;
+    private final ViewLogService viewLogService;
     private final PostRepository postRepository;
+    private final PostLikeService postLikeService;
     private final MemberRepository memberRepository;
     private final LikeCountCacheRepository likeCountCacheRepository;
     private final ViewCountCacheRepository viewCountCacheRepository;
+    private final LikeLogService likeLogService;
 
     @Transactional
     public CreatePostResponseDto createPost(
@@ -95,7 +103,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PostDetailDto getPostDetail(Long postId) {
+    public PostDetailDto getPostDetail(Long postId, Integer requestMemberId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
         Member writer = post.getWriter();
@@ -108,6 +116,7 @@ public class PostService {
                 .map(pi -> new PostImageInfoDto(pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
         viewCountCacheRepository.increaseCount(postId); // Cache에 조회수 갱신
+        viewLogService.createViewLog(postId, requestMemberId); // 조회 이벤트에 대한 로그 추가
         return PostDetailDto.builder()
                 .postId(postId)
                 .writer(profile)
@@ -119,6 +128,21 @@ public class PostService {
                 .commentCount(post.getCommentCount())
                 .createdAt(post.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void likePost(Long postId, Integer memberId, LikeLogType type) {
+        postLikeService.updatePostLike(postId, memberId, type); // 게시글 좋아요 정보 업데이트
+        likeLogService.createLikeLog(postId, memberId, type);   // 게시글 좋아요 로그 추가
+        // 캐시정보 갱신
+        if (LikeLogType.LIKE.equals(type)) {
+            likeCountCacheRepository.increaseCount(postId);
+        } else if (LikeLogType.CANCEL.equals(type)) {
+            likeCountCacheRepository.decreaseCount(postId);
+        } else {
+            log.error("유효하지 않은 좋아요 로그 타입 : {}", type);
+            throw new InvalidLikeLogTypeException("유효하지 않은 좋아요 로그 타입입니다.");
+        }
     }
 
     @Transactional
