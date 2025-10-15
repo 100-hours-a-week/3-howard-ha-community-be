@@ -19,4 +19,10 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
             @Param("referenceId") Long referenceId
     );
 
+    @Query("select i.id from Image i where i.imageType = :imageType and i.referenceId = :referenceId")
+    List<Long> findImageIdByImageTypeAndReferenceId(
+            @Param("imageType") ImageType imageType,
+            @Param("referenceId") Long referenceId
+    );
+
 }

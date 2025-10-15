@@ -3,6 +3,7 @@ package com.ktb.howard.ktb_community_server.member.controller;
 import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
 import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
+import com.ktb.howard.ktb_community_server.member.dto.MemberUpdateRequestDto;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -58,6 +59,23 @@ public class MemberController {
                 loginMember.getNickname()
         );
         return ResponseEntity.status(200).body(response);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me")
+    public ResponseEntity<String> updateMember(
+            @AuthenticationPrincipal CustomUser loginMember,
+            @RequestBody MemberUpdateRequestDto request
+    ) {
+        memberService.updateMember(
+                loginMember.getId(),
+                request.getNickname(),
+                request.getCurrentPassword(),
+                request.getNewPassword(),
+                request.getProfileImageId(),
+                request.getDeleteProfileImage()
+        );
+        return ResponseEntity.ok("회원 정보가 수정되었습니다.");
     }
 
     @PreAuthorize("isAuthenticated()")
