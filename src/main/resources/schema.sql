@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS like_log (
     created_at	 TIMESTAMP  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '좋아요 기록을 생성한 일자, 시각',
 
     PRIMARY KEY (like_log_id),
-    FOREIGN KEY (member_id) REFERENCES member (member_id)
+    FOREIGN KEY (member_id) REFERENCES member (member_id),
+    FOREIGN KEY (post_id) REFERENCES post (post_id)
 ) COMMENT = '게시글에 대한 좋아요 클릭 로그';
 ## Index 설정
 CREATE INDEX idx_like_log_post_member_type_created ON like_log (post_id, member_id, type, created_at);
@@ -65,7 +66,8 @@ CREATE TABLE IF NOT EXISTS view_log (
     created_at	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '조회 기록을 생성한 일자, 시각',
 
     PRIMARY KEY (view_log_id),
-    FOREIGN KEY (member_id) REFERENCES member (member_id)
+    FOREIGN KEY (member_id) REFERENCES member (member_id),
+    FOREIGN KEY (post_id) REFERENCES post (post_id)
 ) COMMENT = '게시글 조회 로그';
 ## Index 설정
 CREATE INDEX idx_view_log_post_member_created ON view_log (post_id, member_id, created_at);
