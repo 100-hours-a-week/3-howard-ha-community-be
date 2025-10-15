@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.member.service;
 
+import com.google.common.base.Strings;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
 import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
@@ -9,6 +10,8 @@ import com.ktb.howard.ktb_community_server.member.dto.MemberCreateRequestDto;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
+import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
+import com.ktb.howard.ktb_community_server.member.exception.PasswordNotMatchedException;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +76,53 @@ public class MemberService {
             profileImageUrl = response.getFirst().url();
         }
         return new MemberInfoResponseDto(email, nickname, profileImageUrl);
+    }
+
+    @Transactional
+    public void updateMember(
+            Integer memberId,
+            String nickname,
+            String currentPassword,
+            String newPassword,
+            Long profileImageId,
+            Boolean deleteProfileImage
+    ) {
+        // 1. 수정할 대상인 회원정보를 불러옴
+        Member member = memberRepository.findById(memberId.longValue()).orElseThrow(() -> {
+            log.error("수정할 회원정보 없음 : memberId={}", memberId);
+            return new MemberNotFoundException("수정할 회원정보가 없습니다.");
+        });
+        // 2. 닉네임에 대한 변경요청이 있는 경우 업데이트를 진행함
+        if (nickname != null) {
+            // 2-1. 현재 닉네임이 사용 가능한 닉네임인지 확인
+            checkNickname(nickname);
+            // 2-2. 사용 가능한 닉네임인 경우 닉네임 값에 대한 업데이트를 진행
+            member.updateNickname(nickname);
+        }
+        // 3. 비밀번호에 대한 변경요청이 있는 경우 업데이트를 진행함
+        if (!Strings.isNullOrEmpty(currentPassword) && !Strings.isNullOrEmpty(newPassword)) {
+            // 3-1. 현재 비밀번호를 올바르게 입력했는 지 먼저 확인
+            if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+                log.info("비밀번호 변경을 요청하는 기존 비밀번호 불일치 : memberId={}", memberId);
+                throw new PasswordNotMatchedException("비밀번호 변경을 요청하는 기존 비밀번호 불일치");
+            }
+            // 3-2. 비밀번호에 대한 업데이트 진행
+            member.updatePassword(passwordEncoder.encode(newPassword));
+        }
+        // 4. 프로필 이미지에 대한 변경요청이 있는 경우 업데이트를 진행함
+        if (Boolean.TRUE.equals(deleteProfileImage)) {
+            // 4-1. 프로필 이미지 삭제 요청이 있는 경우 이미지를 먼저 삭제
+            List<Long> profileImage = imageService.findImageIds(ImageType.PROFILE, memberId.longValue());
+            if (!profileImage.isEmpty()) {
+                Long curProfileImageId = profileImage.getFirst();
+                log.info("기존 프로필 이미지 삭제 영역으로 이동 : imageId={}, memberId={}", curProfileImageId, memberId);
+                imageService.deleteImage(curProfileImageId);
+            }
+        } else if (profileImageId != null) {
+            // 4-2. 새롭게 업로드한 이미지가 있는 경우 영속화 진행
+            log.info("새로운 프로필 이미지 영속화 : imageId={}, memberId={}", profileImageId, memberId);
+            imageService.persistImage(profileImageId, member, member.getId().longValue());
+        }
     }
 
     @Transactional

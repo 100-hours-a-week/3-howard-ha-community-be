@@ -1,0 +1,39 @@
+package com.ktb.howard.ktb_community_server.member.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@AllArgsConstructor
+@Getter
+public class MemberUpdateRequestDto {
+
+    @NotBlank(message = "닉네임은 필수 입력 값입니다.")
+    @Pattern(
+            regexp = "^\\S{1,10}$",
+            message = "닉네임은 띄어쓰기를 포함할 수 없으며, 10글자 이내로 구성되어야 합니다."
+    )
+    private String nickname;
+
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()]).{8,20}$",
+            message = "비밀번호는 8~20자의 영문 대/소문자, 숫자, 특수문자(!@#$%^&*())를 사용해야 합니다."
+    )
+    private String currentPassword;
+
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()]).{8,20}$",
+            message = "비밀번호는 8~20자의 영문 대/소문자, 숫자, 특수문자(!@#$%^&*())를 사용해야 합니다."
+    )
+    private String newPassword;
+
+    @Positive(message = "프로필 이미지 ID값이 올바르지 않습니다.")
+    private Long profileImageId;
+
+    private Boolean deleteProfileImage;
+
+}

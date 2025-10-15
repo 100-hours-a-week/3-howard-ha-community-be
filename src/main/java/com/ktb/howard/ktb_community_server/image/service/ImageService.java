@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.google.common.io.Files;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -141,6 +142,24 @@ public class ImageService {
         image.updateStatus(ImageStatus.PERSIST);
     }
 
+    @Transactional
+    public void deleteImage(Long imageId) {
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> {
+                    log.error("삭제 조치할 이미지 없음: imageId={}", imageId);
+                    return new ImageNotFoundException("삭제할 이미지가 없습니다.", imageId);
+                });
+        GenerateObjectKeyResponse deleteObjectKey = generateObjectKey(
+                image.getImageType(),
+                image.getFileName(),
+                ImageStatus.DELETED
+        );
+        s3Service.moveObject(image.getObjectKey(), deleteObjectKey.objectKey());
+        image.updateObjectKey(deleteObjectKey.objectKey());
+        image.updateStatus(ImageStatus.DELETED);
+        image.updateDeletedAt(LocalDateTime.now());
+    }
+
     public GenerateObjectKeyResponse generateObjectKey(ImageType imageType, String originalFileName, ImageStatus status) {
         String objectKey;
         String fileName;
@@ -155,12 +174,20 @@ public class ImageService {
         } else if (ImageStatus.PERSIST.equals(status)) {
             fileName = originalFileName;
             objectKey = (ImageType.PROFILE.equals(imageType) ? "profiles/" : "posts/") + fileName;
+        } else if (ImageStatus.DELETED.equals(status)) {
+            fileName = originalFileName;
+            objectKey = (ImageType.PROFILE.equals(imageType) ? "deleted/profiles/" : "deleted/posts/") + fileName;
         } else {
             log.error("Object Key 생성 불가 상태값 = {}", status.toString());
             throw new InvalidImageStatusException("Object Key 생성을 할 수 있는 상태값이 아닙니다.", status);
         }
         log.info("ObjectKey 생성 : fileName={}, objectKey={}", fileName, objectKey);
         return new GenerateObjectKeyResponse(objectKey, fileName);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> findImageIds(ImageType imageType, Long referenceId) {
+        return imageRepository.findImageIdByImageTypeAndReferenceId(imageType, referenceId);
     }
 
 }

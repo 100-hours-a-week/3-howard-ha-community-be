@@ -5,6 +5,7 @@ import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageExc
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
 import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
+import com.ktb.howard.ktb_community_server.member.exception.PasswordNotMatchedException;
 import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
 import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
 import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeAlreadyExistException;
@@ -120,6 +121,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PostLikeAlreadyExistException.class)
     public ResponseEntity<String> handlePostLikeAlreadyExistException(PostLikeAlreadyExistException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PasswordNotMatchedException.class)
+    public ResponseEntity<String> handlePasswordNotMatchedException(PasswordNotMatchedException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

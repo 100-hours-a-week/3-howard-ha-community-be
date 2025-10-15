@@ -6,7 +6,12 @@ import lombok.Getter;
 public class ImageNotFoundException extends RuntimeException {
 
     private final Long imageId;
-    private final Long referenceId;
+    private Long referenceId;
+
+    public ImageNotFoundException(String message, Long imageId) {
+        super(message);
+        this.imageId = imageId;
+    }
 
     public ImageNotFoundException(String message, Long imageId, Long referenceId) {
         super(message);
