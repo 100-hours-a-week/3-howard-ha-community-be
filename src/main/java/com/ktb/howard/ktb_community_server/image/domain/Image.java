@@ -114,4 +114,8 @@ public class Image extends BaseEntity {
         this.objectKey = objectKey;
     }
 
+    public void updateSequence(Integer sequence) {
+        this.sequence = sequence;
+    }
+
 }

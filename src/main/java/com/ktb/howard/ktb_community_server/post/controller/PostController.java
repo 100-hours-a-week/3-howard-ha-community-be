@@ -70,6 +70,23 @@ public class PostController {
     }
 
     @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/{postId}")
+    public ResponseEntity<String> updatePost(
+            @AuthenticationPrincipal CustomUser loginMember,
+            @PathVariable Long postId,
+            @RequestBody PostUpdateRequestDto request
+    ) {
+        postService.updatePost(
+                loginMember.getId(),
+                postId,
+                request.getTitle(),
+                request.getContent(),
+                request.getImages()
+        );
+        return ResponseEntity.ok("게시글을 수정했습니다.");
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{postId}")
     public ResponseEntity<String> deletePostById(
             @AuthenticationPrincipal CustomUser loginMember,
