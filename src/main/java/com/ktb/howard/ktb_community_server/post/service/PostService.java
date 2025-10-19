@@ -96,17 +96,18 @@ public class PostService {
                     MemberInfoResponseDto profile = memberService
                             .getProfile(p.getWriter().getId(), p.getWriter().getEmail(), p.getWriter().getNickname());
                     return new GetPostsResponseDto(
+                            p.getId(),
                             p.getTitle(),
                             likeCountCacheRepository.get(p.getId()).intValue(),
-                            viewCountCacheRepository.get(p.getId()),
                             p.getCommentCount(),
+                            viewCountCacheRepository.get(p.getId()),
                             p.getCreatedAt(),
                             profile
                     );
                 }).toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PostDetailDto getPostDetail(Long postId, Integer requestMemberId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
