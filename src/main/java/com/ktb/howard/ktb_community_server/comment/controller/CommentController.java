@@ -8,9 +8,6 @@ import com.ktb.howard.ktb_community_server.comment.dto.UpdateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,11 +43,12 @@ public class CommentController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<Page<CommentResponseDto>> getComments(
+    public ResponseEntity<List<CommentResponseDto>> getComments(
             @PathVariable Long postId,
-            @PageableDefault(size = 20) Pageable pageable
+            @RequestParam("cursor") Long cursor,
+            @RequestParam("size") Integer size
     ) {
-        Page<CommentResponseDto> comments = commentService.getComments(postId, pageable);
+        List<CommentResponseDto> comments = commentService.getComments(postId, cursor, size);
         return ResponseEntity.ok(comments);
     }
 
