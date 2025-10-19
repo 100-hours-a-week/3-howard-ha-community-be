@@ -17,6 +17,8 @@ public class CommentResponseDto {
 
     private final LocalDateTime createdAt;
 
+    private final LocalDateTime deletedAt;
+
     public CommentResponseDto(Comment comment, String writerProfileImageUrl) {
         this.commentId = comment.getId();
         this.content = comment.getContent();
@@ -26,6 +28,7 @@ public class CommentResponseDto {
                 writerProfileImageUrl
         );
         this.createdAt = comment.getCreatedAt();
+        this.deletedAt = comment.getDeletedAt();
     }
 
 }

@@ -64,4 +64,12 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decreaseCommentCount() {
+        this.commentCount--;
+    }
+
 }
