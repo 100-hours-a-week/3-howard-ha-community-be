@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    @Query("select p from Post p where p.id <= :lastPostId order by p.createdAt desc")
+    @Query("select p from Post p where p.id < :lastPostId order by p.createdAt desc")
     Slice<Post> findPostsNextPage(@Param("lastPostId") Long lastPostId, PageRequest pageRequest);
 
     @Query("select p from Post p order by p.createdAt desc")
