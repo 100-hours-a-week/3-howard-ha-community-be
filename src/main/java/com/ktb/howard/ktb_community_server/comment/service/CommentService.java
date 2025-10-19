@@ -54,6 +54,7 @@ public class CommentService {
                 .content(content)
                 .build();
         commentRepository.save(comment);
+        post.increaseCommentCount(); // 댓글 수 1증가
         return new CreateCommentResponseDto(
                 comment.getId(),
                 comment.getPost().getId(),
@@ -112,6 +113,7 @@ public class CommentService {
         if (!loginMemberId.equals(findComment.getMember().getId())) {
             throw new AccessDeniedException("올바르지 않은 요청입니다.");
         }
+        findComment.getPost().decreaseCommentCount(); // 댓글 갯수 1감소
         findComment.updateDeletedAt(LocalDateTime.now());
     }
 
