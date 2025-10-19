@@ -27,13 +27,14 @@ public class CommentController {
     private final CommentService commentService;
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/comments")
+    @PostMapping("/{postId}/comments")
     public ResponseEntity<CreateCommentResponseDto> createComment(
             @AuthenticationPrincipal CustomUser loginMember,
+            @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequestDto request
     ) {
         CreateCommentResponseDto response = commentService.createComment(
-                request.postId(),
+                postId,
                 loginMember.getId(),
                 request.parentCommentId(),
                 request.content()

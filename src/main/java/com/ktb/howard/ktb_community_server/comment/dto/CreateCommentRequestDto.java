@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Positive;
 
 public record CreateCommentRequestDto(
         @Positive
-        @NotNull(message = "postId는 필수값입니다.")
-        Long postId,
-        @Positive
         @NotNull(message = "memberId는 필수값입니다.")
         Integer memberId,
         @Positive
