@@ -1,6 +1,7 @@
 package com.ktb.howard.ktb_community_server.comment.service;
 
 import com.ktb.howard.ktb_community_server.comment.domain.Comment;
+import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -119,6 +121,136 @@ class CommentServiceTest {
                         findComment.get().getMember().getId(),
                         findComment.get().getParentComment().getId(),
                         findComment.get().getContent()
+                );
+    }
+
+    @Test
+    @DisplayName("댓글 목록 조회 - 커서의 값이 0인 경우, 가장 최근 댓글을 조회하여 반환한다.")
+    void getCommentsNoCursorTest() throws InterruptedException {
+        // given
+        Member writer = Member.builder()
+                .email("test1@example.com")
+                .password("Password12345!")
+                .nickname("test1.park")
+                .build();
+        memberRepository.save(writer);
+        Post post = Post.builder()
+                .writer(writer)
+                .title("테스트 제목1")
+                .content("테스트용 게시글 본문1")
+                .build();
+        postRepository.save(post);
+        List<Comment> commentList = new ArrayList<>();
+        for (int i=1 ; i<=20 ; i++) {
+            Comment comment = Comment.builder()
+                    .post(post)
+                    .member(writer)
+                    .content("테스트용 댓글 " + i)
+                    .build();
+            commentList.add(comment);
+            commentRepository.save(comment);
+            Thread.sleep(500);
+        }
+
+        // when
+        List<CommentResponseDto> comments = commentService.getComments(post.getId(), 0L, 3);
+
+        // then
+        assertThat(comments).hasSize(3)
+                .extracting(
+                        "commentId",
+                        "content",
+                        "writerInfo.email",
+                        "writerInfo.nickname",
+                        "createdAt"
+                )
+                .containsExactly(
+                        tuple(
+                                commentList.get(19).getId(),
+                                commentList.get(19).getContent(),
+                                commentList.get(19).getMember().getEmail(),
+                                commentList.get(19).getMember().getNickname(),
+                                commentList.get(19).getCreatedAt()
+                        ),
+                        tuple(
+                                commentList.get(18).getId(),
+                                commentList.get(18).getContent(),
+                                commentList.get(18).getMember().getEmail(),
+                                commentList.get(18).getMember().getNickname(),
+                                commentList.get(18).getCreatedAt()
+                        ),
+                        tuple(
+                                commentList.get(17).getId(),
+                                commentList.get(17).getContent(),
+                                commentList.get(17).getMember().getEmail(),
+                                commentList.get(17).getMember().getNickname(),
+                                commentList.get(17).getCreatedAt()
+                        )
+                );
+    }
+
+    @Test
+    @DisplayName("댓글 목록 조회 - 커서의 값이 0이 아닌 경우, 해당 커서 이후의 값을 조회하여 반환한다.")
+    void getCommentsWithCursorTest() throws InterruptedException {
+        // given
+        Member writer = Member.builder()
+                .email("test1@example.com")
+                .password("Password12345!")
+                .nickname("test1.park")
+                .build();
+        memberRepository.save(writer);
+        Post post = Post.builder()
+                .writer(writer)
+                .title("테스트 제목1")
+                .content("테스트용 게시글 본문1")
+                .build();
+        postRepository.save(post);
+        List<Comment> commentList = new ArrayList<>();
+        for (int i=1 ; i<=20 ; i++) {
+            Comment comment = Comment.builder()
+                    .post(post)
+                    .member(writer)
+                    .content("테스트용 댓글 " + i)
+                    .build();
+            commentList.add(comment);
+            commentRepository.save(comment);
+            Thread.sleep(500);
+        }
+
+        // when
+        List<CommentResponseDto> comments = commentService.getComments(post.getId(), commentList.get(15).getId(), 3);
+
+        // then
+        assertThat(comments).hasSize(3)
+                .extracting(
+                        "commentId",
+                        "content",
+                        "writerInfo.email",
+                        "writerInfo.nickname",
+                        "createdAt"
+                )
+                .containsExactly(
+                        tuple(
+                                commentList.get(14).getId(),
+                                commentList.get(14).getContent(),
+                                commentList.get(14).getMember().getEmail(),
+                                commentList.get(14).getMember().getNickname(),
+                                commentList.get(14).getCreatedAt()
+                        ),
+                        tuple(
+                                commentList.get(13).getId(),
+                                commentList.get(13).getContent(),
+                                commentList.get(13).getMember().getEmail(),
+                                commentList.get(13).getMember().getNickname(),
+                                commentList.get(13).getCreatedAt()
+                        ),
+                        tuple(
+                                commentList.get(12).getId(),
+                                commentList.get(12).getContent(),
+                                commentList.get(12).getMember().getEmail(),
+                                commentList.get(12).getMember().getNickname(),
+                                commentList.get(12).getCreatedAt()
+                        )
                 );
     }
 
