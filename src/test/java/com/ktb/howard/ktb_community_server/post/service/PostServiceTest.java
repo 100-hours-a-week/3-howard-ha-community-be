@@ -233,7 +233,7 @@ class PostServiceTest {
         List<GetPostsResponseDto> posts = postService.getPosts(post2.getId(), 3);
 
         // then
-        assertThat(posts).hasSize(2)
+        assertThat(posts).hasSize(1)
                 .extracting(
                         "title",
                         "likeCount",
@@ -244,15 +244,6 @@ class PostServiceTest {
                         "writer.nickname"
                 )
                 .containsExactly(
-                        tuple(
-                                post2.getTitle(),
-                                post2.getLikeCount(),
-                                post2.getViewCount(),
-                                post2.getCommentCount(),
-                                post2.getCreatedAt(),
-                                post2.getWriter().getEmail(),
-                                post2.getWriter().getNickname()
-                        ),
                         tuple(
                                 post1.getTitle(),
                                 post1.getLikeCount(),
