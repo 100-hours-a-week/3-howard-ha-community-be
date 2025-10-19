@@ -50,10 +50,11 @@ public class SecurityConfig {
                         .sessionAuthenticationStrategy(sessionAuthenticationStrategy())
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/members").permitAll()
                         .requestMatchers(HttpMethod.GET, "/members/emails/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/members/nicknames/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/images/url/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/images/upload-urls/**").permitAll()
                         .requestMatchers(
                                 "/",
                                 "/auth",
