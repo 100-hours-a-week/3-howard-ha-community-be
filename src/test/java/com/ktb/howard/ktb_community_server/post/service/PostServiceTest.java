@@ -12,6 +12,7 @@ import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.CreatePostResponseDto;
 import com.ktb.howard.ktb_community_server.post.dto.GetPostsResponseDto;
 import com.ktb.howard.ktb_community_server.post.dto.PostDetailDto;
+import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -311,7 +313,7 @@ class PostServiceTest {
         assertThat(response.getLikeCount()).isZero();
         assertThat(response.getViewCount()).isOne();
         assertThat(response.getCommentCount()).isZero();
-        assertThat(response.getCreatedAt()).isEqualTo(post.getCreatedAt());
+        assertThat(response.getCreatedAt()).isEqualTo(post.getCreatedAt().truncatedTo(ChronoUnit.SECONDS));
         assertThat(response.getWriter())
                 .extracting("email", "nickname", "profileImageUrl")
                 .containsExactly(writer.getEmail(), writer.getNickname(), null);
@@ -325,7 +327,7 @@ class PostServiceTest {
 
         // when // then
         assertThatThrownBy(() -> postService.getPostDetail(1L, 1))
-                .isInstanceOf(NoSuchElementException.class)
+                .isInstanceOf(PostNotFoundException.class)
                 .hasMessage("존재하지 않는 게시글입니다.");
     }
 

@@ -17,6 +17,7 @@ import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.*;
 import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
+import com.ktb.howard.ktb_community_server.post.repository.PostQueryRepository;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
 import com.ktb.howard.ktb_community_server.post_like.service.PostLikeService;
@@ -42,6 +43,7 @@ public class PostService {
     private final MemberService memberService;
     private final ViewLogService viewLogService;
     private final PostRepository postRepository;
+    private final PostQueryRepository postQueryRepository;
     private final PostLikeService postLikeService;
     private final MemberRepository memberRepository;
     private final LikeCountCacheRepository likeCountCacheRepository;
@@ -109,15 +111,18 @@ public class PostService {
 
     @Transactional
     public PostDetailDto getPostDetail(Long postId, Integer requestMemberId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
-        Member writer = post.getWriter();
-        MemberInfoResponseDto profile = memberService.getProfile(writer.getId(), writer.getEmail(), writer.getNickname());
-        List<ImageUrlResponseDto> response = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(
-                ImageType.POST,
-                postId
-        ));
-        List<PostImageInfoDto> postImages = response.stream()
+        PostDetailWithLikeInfoDto postDetail = postQueryRepository.getPostDetail(postId, requestMemberId)
+                .orElseThrow(() -> {
+                    log.error("찾을 수 없는 게시글 = {}", postId);
+                    return new PostNotFoundException("존재하지 않는 게시글입니다.");
+                });
+        MemberInfoResponseDto profile = memberService.getProfile(
+                postDetail.writerId(),
+                postDetail.writerEmail(),
+                postDetail.writerNickname()
+        );
+        List<PostImageInfoDto> postImages = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(ImageType.POST, postId))
+                .stream()
                 .map(pi -> new PostImageInfoDto(pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
         viewCountCacheRepository.increaseCount(postId); // Cache에 조회수 갱신
@@ -126,12 +131,13 @@ public class PostService {
                 .postId(postId)
                 .writer(profile)
                 .postImages(postImages)
-                .title(post.getTitle())
-                .content(post.getContent())
+                .title(postDetail.title())
+                .content(postDetail.content())
                 .likeCount(likeCountCacheRepository.get(postId).intValue())
                 .viewCount(viewCountCacheRepository.get(postId))
-                .commentCount(post.getCommentCount())
-                .createdAt(post.getCreatedAt())
+                .commentCount(postDetail.commentCount())
+                .isLiked(postDetail.isLiked())
+                .createdAt(postDetail.createdAt())
                 .build();
     }
 
