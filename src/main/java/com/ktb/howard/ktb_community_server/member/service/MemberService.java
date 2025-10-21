@@ -71,11 +71,13 @@ public class MemberService {
                 memberId.longValue()
         );
         String profileImageUrl = null;
+        Long imageId = null;
         List<ImageUrlResponseDto> response = imageService.createImageViewUrl(request);
         if (!response.isEmpty()) {
+            imageId = response.getFirst().imageId();
             profileImageUrl = response.getFirst().url();
         }
-        return new MemberInfoResponseDto(email, nickname, profileImageUrl);
+        return new MemberInfoResponseDto(email, nickname, imageId, profileImageUrl);
     }
 
     @Transactional
@@ -118,8 +120,9 @@ public class MemberService {
                 log.info("기존 프로필 이미지 삭제 영역으로 이동 : imageId={}, memberId={}", curProfileImageId, memberId);
                 imageService.deleteImage(curProfileImageId);
             }
-        } else if (profileImageId != null) {
-            // 4-2. 새롭게 업로드한 이미지가 있는 경우 영속화 진행
+        }
+        // 4-2. 새롭게 업로드한 이미지가 있는 경우 영속화 진행
+        if (profileImageId != null) {
             log.info("새로운 프로필 이미지 영속화 : imageId={}, memberId={}", profileImageId, memberId);
             imageService.persistImage(profileImageId, member, member.getId().longValue());
         }
