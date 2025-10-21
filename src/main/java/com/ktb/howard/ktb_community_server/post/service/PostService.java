@@ -96,7 +96,7 @@ public class PostService {
         return posts.stream()
                 .map(p -> {
                     MemberInfoResponseDto profile = memberService
-                            .getProfile(p.getWriter().getId(), p.getWriter().getEmail(), p.getWriter().getNickname());
+                            .getProfile(p.getWriter().getId());
                     return new GetPostsResponseDto(
                             p.getId(),
                             p.getTitle(),
@@ -116,11 +116,7 @@ public class PostService {
                     log.error("찾을 수 없는 게시글 = {}", postId);
                     return new PostNotFoundException("존재하지 않는 게시글입니다.");
                 });
-        MemberInfoResponseDto profile = memberService.getProfile(
-                postDetail.writerId(),
-                postDetail.writerEmail(),
-                postDetail.writerNickname()
-        );
+        MemberInfoResponseDto profile = memberService.getProfile(postDetail.writerId());
         List<PostImageInfoDto> postImages = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(ImageType.POST, postId))
                 .stream()
                 .map(pi -> new PostImageInfoDto(pi.url(), pi.sequence(), pi.expiresAt()))

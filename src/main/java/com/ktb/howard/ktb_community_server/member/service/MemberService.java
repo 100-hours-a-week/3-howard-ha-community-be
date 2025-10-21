@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -51,6 +52,11 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Member> findMemberById(Long memberId) {
+        return memberRepository.findById(memberId);
+    }
+
+    @Transactional(readOnly = true)
     public void checkEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
             throw new AlreadyUsedEmailException("이미 가입에 사용된 이메일 입니다.", email);
@@ -65,11 +71,13 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public MemberInfoResponseDto getProfile(Integer memberId, String email, String nickname) {
+    public MemberInfoResponseDto getProfile(Integer memberId) {
         CreateImageViewUrlRequestDto request = new CreateImageViewUrlRequestDto(
                 ImageType.PROFILE,
                 memberId.longValue()
         );
+        Member member = memberRepository.findById(memberId.longValue())
+                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 회원입니다."));
         String profileImageUrl = null;
         Long imageId = null;
         List<ImageUrlResponseDto> response = imageService.createImageViewUrl(request);
@@ -77,7 +85,7 @@ public class MemberService {
             imageId = response.getFirst().imageId();
             profileImageUrl = response.getFirst().url();
         }
-        return new MemberInfoResponseDto(email, nickname, imageId, profileImageUrl);
+        return new MemberInfoResponseDto(member.getEmail(), member.getNickname(), imageId, profileImageUrl);
     }
 
     @Transactional

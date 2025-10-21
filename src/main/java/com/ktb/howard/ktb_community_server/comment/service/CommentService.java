@@ -77,7 +77,7 @@ public class CommentService {
         return comments.stream()
                 .map(c -> {
                     MemberInfoResponseDto profile = memberService
-                            .getProfile(c.getMember().getId(), c.getMember().getEmail(), c.getMember().getNickname());
+                            .getProfile(c.getMember().getId());
                     return new CommentResponseDto(
                             c,
                             profile.imageId(),
