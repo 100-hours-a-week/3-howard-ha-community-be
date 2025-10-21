@@ -59,7 +59,7 @@ public class PostController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PatchMapping("/like/{postId}")
+    @PatchMapping("/{postId}/like")
     public ResponseEntity<String> likePost(
             @AuthenticationPrincipal CustomUser loginMember,
             @PathVariable Long postId,
