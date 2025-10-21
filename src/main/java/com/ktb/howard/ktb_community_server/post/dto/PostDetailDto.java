@@ -29,6 +29,8 @@ public class PostDetailDto {
 
     private Long commentCount;
 
+    private Boolean isLiked;
+
     private LocalDateTime createdAt;
 
 }
