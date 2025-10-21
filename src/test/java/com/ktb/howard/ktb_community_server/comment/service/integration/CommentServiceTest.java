@@ -1,9 +1,10 @@
-package com.ktb.howard.ktb_community_server.comment.service;
+package com.ktb.howard.ktb_community_server.comment.service.integration;
 
 import com.ktb.howard.ktb_community_server.comment.domain.Comment;
 import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
+import com.ktb.howard.ktb_community_server.comment.service.CommentService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.post.domain.Post;

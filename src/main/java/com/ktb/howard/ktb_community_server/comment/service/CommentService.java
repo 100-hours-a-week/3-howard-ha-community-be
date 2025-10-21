@@ -53,14 +53,14 @@ public class CommentService {
                 .parentComment(parentComment)
                 .content(content)
                 .build();
-        commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
         post.increaseCommentCount(); // 댓글 수 1증가
         return new CreateCommentResponseDto(
-                comment.getId(),
-                comment.getPost().getId(),
-                comment.getMember().getId(),
-                parentComment != null ? comment.getParentComment().getId() : null,
-                comment.getContent()
+                savedComment.getId(),
+                savedComment.getPost().getId(),
+                savedComment.getMember().getId(),
+                parentComment != null ? savedComment.getParentComment().getId() : null,
+                savedComment.getContent()
         );
     }
 
