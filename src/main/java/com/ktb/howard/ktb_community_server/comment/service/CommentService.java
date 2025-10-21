@@ -6,6 +6,7 @@ import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
+import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
@@ -79,6 +80,7 @@ public class CommentService {
                             .getProfile(c.getMember().getId(), c.getMember().getEmail(), c.getMember().getNickname());
                     return new CommentResponseDto(
                             c,
+                            profile.imageId(),
                             profile.profileImageUrl()
                     );
                 }).toList();
@@ -88,10 +90,12 @@ public class CommentService {
     public List<CommentResponseDto> getChildComments(Long parentCommentId) {
         return commentRepository.findByParentCommentId(parentCommentId).stream()
                 .map(c -> {
-                    String profileImageUrl = imageService.createImageViewUrl(
+                    ImageUrlResponseDto imageUrlResponse = imageService.createImageViewUrl(
                             new CreateImageViewUrlRequestDto(ImageType.PROFILE, c.getMember().getId().longValue())
-                    ).getFirst().url();
-                    return new CommentResponseDto(c, profileImageUrl);
+                    ).getFirst();
+                    String profileImageUrl = imageUrlResponse.url();
+                    Long imageId = imageUrlResponse.imageId();
+                    return new CommentResponseDto(c, imageId, profileImageUrl);
                 })
                 .toList();
     }
