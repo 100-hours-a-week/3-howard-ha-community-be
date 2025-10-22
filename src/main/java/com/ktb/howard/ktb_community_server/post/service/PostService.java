@@ -6,7 +6,6 @@ import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheReposi
 import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
-import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.like_log.service.LikeLogService;
@@ -71,7 +70,7 @@ public class PostService {
                     log.error("이미지 {}가 존재하지 않습니다.", i.imageId());
                     throw new IllegalStateException(String.format("이미지 %d가 존재하지 않습니다.", i.imageId()));
                 }
-                imageService.persistImage(i.imageId(), writer, post.getId());
+                imageService.persistImage(i.imageId(), writer, post.getId(), i.sequence());
             });
         }
 
@@ -206,7 +205,7 @@ public class PostService {
                     }
                 } else {
                     // 추가 대상: 이미지를 영속화하고 게시글과 연결
-                    imageService.persistImage(imageId, post.getWriter(), loginMemberId.longValue());
+                    imageService.persistImage(imageId, post.getWriter(), postId, requestImage.sequence());
                 }
             }
         }
