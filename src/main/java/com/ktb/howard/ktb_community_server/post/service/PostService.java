@@ -119,7 +119,7 @@ public class PostService {
         MemberInfoResponseDto profile = memberService.getProfile(postDetail.writerId());
         List<PostImageInfoDto> postImages = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(ImageType.POST, postId))
                 .stream()
-                .map(pi -> new PostImageInfoDto(pi.url(), pi.sequence(), pi.expiresAt()))
+                .map(pi -> new PostImageInfoDto(pi.imageId(), pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
         viewCountCacheRepository.increaseCount(postId); // Cache에 조회수 갱신
         viewLogService.createViewLog(postId, requestMemberId); // 조회 이벤트에 대한 로그 추가
