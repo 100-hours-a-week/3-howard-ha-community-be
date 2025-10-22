@@ -123,7 +123,7 @@ public class ImageService {
     }
 
     @Transactional
-    public void persistImage(Long imageId, Member owner, Long referenceId) {
+    public void persistImage(Long imageId, Member owner, Long referenceId, Integer sequence) {
         Optional<Image> imageOpt = imageRepository.findById(imageId);
         if (imageOpt.isEmpty()) {
             log.error("존재하지 않은 이미지: imageId={}, ownerId={}, referenceId={}", imageId, owner.getId(), referenceId);
@@ -140,6 +140,7 @@ public class ImageService {
         image.updateReference(referenceId);
         image.updateObjectKey(persistObjectKey.objectKey());
         image.updateStatus(ImageStatus.PERSIST);
+        image.updateSequence(sequence);
     }
 
     @Transactional

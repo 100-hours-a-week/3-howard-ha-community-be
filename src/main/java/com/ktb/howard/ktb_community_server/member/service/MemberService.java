@@ -46,7 +46,7 @@ public class MemberService {
                 log.error("이미지 {}가 존재하지 않습니다.", request.getProfileImageId());
                 throw new IllegalStateException(String.format("이미지 %d가 존재하지 않습니다.", request.getProfileImageId()));
             }
-            imageService.persistImage(request.getProfileImageId(), member, member.getId().longValue());
+            imageService.persistImage(request.getProfileImageId(), member, member.getId().longValue(), 1);
         }
         return member;
     }
@@ -132,7 +132,7 @@ public class MemberService {
         // 4-2. 새롭게 업로드한 이미지가 있는 경우 영속화 진행
         if (profileImageId != null) {
             log.info("새로운 프로필 이미지 영속화 : imageId={}, memberId={}", profileImageId, memberId);
-            imageService.persistImage(profileImageId, member, member.getId().longValue());
+            imageService.persistImage(profileImageId, member, member.getId().longValue(), 1);
         }
     }
 
