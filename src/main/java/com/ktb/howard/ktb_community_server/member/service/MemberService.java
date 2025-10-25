@@ -80,12 +80,21 @@ public class MemberService {
                 .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 회원입니다."));
         String profileImageUrl = null;
         Long imageId = null;
-        List<ImageUrlResponseDto> response = imageService.createImageViewUrl(request);
-        if (!response.isEmpty()) {
-            imageId = response.getFirst().imageId();
-            profileImageUrl = response.getFirst().url();
+        String email = null;
+        String nickname;
+        if (member.getDeletedAt() != null) {
+            // 탈퇴한 회원인 경우
+            nickname = "탈퇴한 회원";
+        } else {
+            List<ImageUrlResponseDto> response = imageService.createImageViewUrl(request);
+            if (!response.isEmpty()) {
+                imageId = response.getFirst().imageId();
+                profileImageUrl = response.getFirst().url();
+            }
+            email = member.getEmail();
+            nickname = member.getNickname();
         }
-        return new MemberInfoResponseDto(member.getEmail(), member.getNickname(), imageId, profileImageUrl);
+        return new MemberInfoResponseDto(email, nickname, imageId, profileImageUrl);
     }
 
     @Transactional
