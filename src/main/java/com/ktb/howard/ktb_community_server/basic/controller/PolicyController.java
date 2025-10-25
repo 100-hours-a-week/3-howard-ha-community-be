@@ -13,4 +13,9 @@ public class PolicyController {
         return "policy/termsOfService";
     }
 
+    @GetMapping("/privacy")
+    public String getPrivacy() {
+        return "policy/privacy";
+    }
+
 }
