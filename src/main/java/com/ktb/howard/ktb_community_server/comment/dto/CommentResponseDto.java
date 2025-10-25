@@ -19,15 +19,16 @@ public class CommentResponseDto {
 
     private final LocalDateTime deletedAt;
 
-    public CommentResponseDto(Comment comment, Long imageId, String writerProfileImageUrl) {
+    public CommentResponseDto(
+            Comment comment,
+            String email,
+            String nickname,
+            Long imageId,
+            String writerProfileImageUrl
+    ) {
         this.commentId = comment.getId();
         this.content = comment.getContent();
-        this.writerInfo = new MemberInfoResponseDto(
-                comment.getMember().getEmail(),
-                comment.getMember().getNickname(),
-                imageId,
-                writerProfileImageUrl
-        );
+        this.writerInfo = new MemberInfoResponseDto(email, nickname, imageId, writerProfileImageUrl);
         this.createdAt = comment.getCreatedAt();
         this.deletedAt = comment.getDeletedAt();
     }

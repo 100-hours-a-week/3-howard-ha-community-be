@@ -69,17 +69,15 @@ public class CommentService {
     public List<CommentResponseDto> getComments(Long postId, Long cursor, Integer size) {
         PageRequest pageRequest = PageRequest.of(0, size);
         Slice<Comment> comments;
-        if (cursor == 0) {
-            comments = commentRepository.findComments(postId, pageRequest);
-        } else {
-            comments = commentRepository.findCommentsNextPage(postId, cursor, pageRequest);
-        }
+        if (cursor == 0) comments = commentRepository.findComments(postId, pageRequest);
+        else comments = commentRepository.findCommentsNextPage(postId, cursor, pageRequest);
         return comments.stream()
                 .map(c -> {
-                    MemberInfoResponseDto profile = memberService
-                            .getProfile(c.getMember().getId());
+                    MemberInfoResponseDto profile = memberService.getProfile(c.getMember().getId());
                     return new CommentResponseDto(
                             c,
+                            profile.email(),
+                            profile.nickname(),
                             profile.imageId(),
                             profile.profileImageUrl()
                     );
@@ -90,12 +88,10 @@ public class CommentService {
     public List<CommentResponseDto> getChildComments(Long parentCommentId) {
         return commentRepository.findByParentCommentId(parentCommentId).stream()
                 .map(c -> {
-                    ImageUrlResponseDto imageUrlResponse = imageService.createImageViewUrl(
-                            new CreateImageViewUrlRequestDto(ImageType.PROFILE, c.getMember().getId().longValue())
-                    ).getFirst();
-                    String profileImageUrl = imageUrlResponse.url();
-                    Long imageId = imageUrlResponse.imageId();
-                    return new CommentResponseDto(c, imageId, profileImageUrl);
+                    MemberInfoResponseDto profile = memberService.getProfile(c.getMember().getId());
+                    return new CommentResponseDto(
+                            c, profile.email(), profile.nickname(), profile.imageId(), profile.profileImageUrl()
+                    );
                 })
                 .toList();
     }
