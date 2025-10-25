@@ -87,15 +87,11 @@ public class PostService {
     public List<GetPostsResponseDto> getPosts(Long cursor, Integer size) {
         PageRequest pageRequest = PageRequest.of(0, size);
         Slice<Post> posts;
-        if (cursor == 0) {
-            posts = postRepository.findPosts(pageRequest);
-        } else {
-            posts = postRepository.findPostsNextPage(cursor, pageRequest);
-        }
+        if (cursor == 0) posts = postRepository.findPosts(pageRequest);
+        else posts = postRepository.findPostsNextPage(cursor, pageRequest);
         return posts.stream()
                 .map(p -> {
-                    MemberInfoResponseDto profile = memberService
-                            .getProfile(p.getWriter().getId());
+                    MemberInfoResponseDto profile = memberService.getProfile(p.getWriter().getId());
                     return new GetPostsResponseDto(
                             p.getId(),
                             p.getTitle(),
