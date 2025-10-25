@@ -61,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/members/emails/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/members/nicknames/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/images/upload-urls/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/policy/**").permitAll()
                         .requestMatchers(
                                 "/",
                                 "/auth",
