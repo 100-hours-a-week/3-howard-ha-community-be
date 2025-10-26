@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS basic_member (
     UNIQUE (email),
     UNIQUE (nickname),
     CHECK (REGEXP_LIKE(email, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')),
-    CHECK (LENGTH(nickname) <= 10 AND nickname NOT LIKE '% %')
+    CHECK (CHAR_LENGTH(nickname) <= 10 AND nickname NOT LIKE '% %')
 ) COMMENT = '회원정보';
 
 CREATE TABLE IF NOT EXISTS basic_post (
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS basic_post (
 
     PRIMARY KEY (basic_post_id),
     FOREIGN KEY (basic_member_id) REFERENCES basic_member (basic_member_id),
-    CHECK (LENGTH(title) <= 100)
+    CHECK (CHAR_LENGTH(title) <= 100)
 ) COMMENT = '게시글';
 
 ### 실제 시스템이 사용하는 DDL
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS member (
     UNIQUE (email),
     UNIQUE (nickname),
     CHECK (REGEXP_LIKE(email, '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')),
-    CHECK (LENGTH(nickname) <= 10 AND nickname NOT LIKE '% %')
+    CHECK (CHAR_LENGTH(nickname) <= 10 AND nickname NOT LIKE '% %')
 ) COMMENT = '회원정보';
 
 CREATE TABLE IF NOT EXISTS like_log (
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS post (
 
     PRIMARY KEY (post_id),
     FOREIGN KEY (member_id) REFERENCES member (member_id),
-    CHECK (LENGTH(title) <= 26)
+    CHECK (CHAR_LENGTH(title) <= 26)
 ) COMMENT = '게시글';
 ## Index 설정
 CREATE INDEX idx_post_deleted_at_created_at ON post (deleted_at, created_at);
