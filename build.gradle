@@ -51,6 +51,8 @@ dependencies {
     implementation 'software.amazon.awssdk:s3'
     /* Guava */
     implementation 'com.google.guava:guava:33.5.0-jre'
+    /* Redis */
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.withType(Test).configureEach {
