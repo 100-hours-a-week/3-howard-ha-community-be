@@ -1,6 +1,7 @@
 package com.ktb.howard.ktb_community_server.comment.controller;
 
-import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
+import com.ktb.howard.ktb_community_server.auth.annotation.AuthMember;
+import com.ktb.howard.ktb_community_server.auth.domain.Session;
 import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
@@ -9,8 +10,6 @@ import com.ktb.howard.ktb_community_server.comment.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -23,16 +22,15 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{postId}/comments")
     public ResponseEntity<CreateCommentResponseDto> createComment(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequestDto request
     ) {
         CreateCommentResponseDto response = commentService.createComment(
                 postId,
-                loginMember.getId(),
+                session.getMemberId(),
                 request.parentCommentId(),
                 request.content()
         );
@@ -41,7 +39,6 @@ public class CommentController {
                 .body(response);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<CommentResponseDto>> getComments(
             @PathVariable Long postId,
@@ -52,31 +49,27 @@ public class CommentController {
         return ResponseEntity.ok(comments);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/comments/{commentId}")
     public ResponseEntity<List<CommentResponseDto>> getChildComments(@PathVariable Long commentId) {
         List<CommentResponseDto> response = commentService.getChildComments(commentId);
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PatchMapping("/comments/{commentId}")
     public ResponseEntity<String> updateComment(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequestDto request
     ) {
-        commentService.updateComment(loginMember.getId(), commentId, request.content());
+        commentService.updateComment(session.getMemberId(), commentId, request.content());
         return ResponseEntity.status(200).body("댓글이 수정되었습니다.");
     }
 
-    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<String> deleteComment(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long commentId
     ) {
-        commentService.softDeleteByCommentId(loginMember.getId(), commentId);
+        commentService.softDeleteByCommentId(session.getMemberId(), commentId);
         return ResponseEntity.status(200).body("댓글이 삭제되었습니다.");
     }
 

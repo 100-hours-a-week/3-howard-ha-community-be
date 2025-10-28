@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.auth.exception.SessionNotFoundException;
 import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
@@ -127,6 +128,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PasswordNotMatchedException.class)
     public ResponseEntity<String> handlePasswordNotMatchedException(PasswordNotMatchedException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<String> handleSessionNotFoundException(SessionNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<String> handleInvalidRequestException(InvalidRequestException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
 }

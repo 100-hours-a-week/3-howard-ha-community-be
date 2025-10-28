@@ -4,9 +4,7 @@ import com.ktb.howard.ktb_community_server.comment.domain.Comment;
 import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
-import com.ktb.howard.ktb_community_server.image.domain.ImageType;
-import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
-import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
+import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
@@ -17,7 +15,6 @@ import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +30,6 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
-    private final ImageService imageService;
 
     @Transactional
     public CreateCommentResponseDto createComment(
@@ -101,7 +97,7 @@ public class CommentService {
         Comment findComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NoSuchElementException(commentId + "에 대응하는 댓글을 찾을 수 없습니다."));
         if (!loginMemberId.equals(findComment.getMember().getId())) {
-            throw new AccessDeniedException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException("올바르지 않은 요청입니다.");
         }
         findComment.updateContent(content);
     }
@@ -111,7 +107,7 @@ public class CommentService {
         Comment findComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NoSuchElementException(commentId + "에 대응하는 댓글을 찾을 수 없습니다."));
         if (!loginMemberId.equals(findComment.getMember().getId())) {
-            throw new AccessDeniedException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException("올바르지 않은 요청입니다.");
         }
         findComment.getPost().decreaseCommentCount(); // 댓글 갯수 1감소
         findComment.updateDeletedAt(LocalDateTime.now());

@@ -42,10 +42,8 @@ dependencies {
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
     /* Swagger */
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
-    /* Spring Security */
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    /* Spring Session */
-    implementation 'org.springframework.session:spring-session-jdbc'
+    /* Spring Security Crypto */
+    implementation 'org.springframework.security:spring-security-crypto'
     /* AWS S3 */
     implementation platform('software.amazon.awssdk:bom:2.26.25')
     implementation 'software.amazon.awssdk:s3'

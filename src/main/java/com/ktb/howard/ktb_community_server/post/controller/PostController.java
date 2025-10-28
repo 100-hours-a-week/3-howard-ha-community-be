@@ -1,14 +1,13 @@
 package com.ktb.howard.ktb_community_server.post.controller;
 
-import com.ktb.howard.ktb_community_server.auth.dto.CustomUser;
+import com.ktb.howard.ktb_community_server.auth.annotation.AuthMember;
+import com.ktb.howard.ktb_community_server.auth.domain.Session;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.post.dto.*;
 import com.ktb.howard.ktb_community_server.post.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -21,14 +20,13 @@ public class PostController {
 
     private final PostService postService;
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ResponseEntity<CreatePostResponseDto> createPost(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @Valid @RequestBody CreatePostRequestDto request
     ) {
         CreatePostResponseDto response = postService.createPost(
-                loginMember.getId(),
+                session.getMemberId(),
                 request.title(),
                 request.content(),
                 request.postImages()
@@ -38,7 +36,6 @@ public class PostController {
                 .body(response);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping
     public ResponseEntity<List<GetPostsResponseDto>> getPosts(
             @RequestParam("cursor") Long cursor,
@@ -48,36 +45,33 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{postId}")
     public ResponseEntity<PostDetailDto> getPostDetail(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long postId
     ) {
-        PostDetailDto response = postService.getPostDetail(postId, loginMember.getId());
+        PostDetailDto response = postService.getPostDetail(postId, session.getMemberId());
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{postId}/like")
     public ResponseEntity<String> likePost(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long postId,
             @RequestParam("type") LikeLogType type
     ) {
-        postService.likePost(postId, loginMember.getId(), type);
+        postService.likePost(postId, session.getMemberId(), type);
         return ResponseEntity.ok("");
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{postId}")
     public ResponseEntity<String> updatePost(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long postId,
             @RequestBody PostUpdateRequestDto request
     ) {
         postService.updatePost(
-                loginMember.getId(),
+                session.getMemberId(),
                 postId,
                 request.getTitle(),
                 request.getContent(),
@@ -86,13 +80,12 @@ public class PostController {
         return ResponseEntity.ok("게시글을 수정했습니다.");
     }
 
-    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{postId}")
     public ResponseEntity<String> deletePostById(
-            @AuthenticationPrincipal CustomUser loginMember,
+            @AuthMember Session session,
             @PathVariable Long postId
     ) {
-        postService.deletePostById(loginMember.getId(), postId);
+        postService.deletePostById(session.getMemberId(), postId);
         return ResponseEntity.ok("게시글이 삭제되었습니다.");
     }
 

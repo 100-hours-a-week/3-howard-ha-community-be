@@ -3,6 +3,7 @@ package com.ktb.howard.ktb_community_server.post.service;
 import com.google.common.base.Strings;
 import com.ktb.howard.ktb_community_server.cache.repository.LikeCountCacheRepository;
 import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheRepository;
+import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
 import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
@@ -25,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -163,7 +163,7 @@ public class PostService {
         // 2. 현재 요청자가 해당 게시글을 수정할 권한이 있는 지 확인
         if (!loginMemberId.equals(post.getWriter().getId())) {
             log.error("올바르지 않은 요청 : loginMemberId={}, postWriterId={}", loginMemberId, post.getWriter().getId());
-            throw new AccessDeniedException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException("올바르지 않은 요청입니다.");
         }
         // 3. 제목에 대한 변경요청이 있는 경우 업데이트를 진행함
         if (!Strings.isNullOrEmpty(title)) {
@@ -212,7 +212,7 @@ public class PostService {
         Post findPost = postRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
         if (!loginMemberId.equals(findPost.getWriter().getId())) {
-            throw new AccessDeniedException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException("올바르지 않은 요청입니다.");
         }
         likeCountCacheRepository.remove(postId); // 좋아요 수 캐시에서 해당 post 제거
         viewCountCacheRepository.remove(postId); // 조회수 캐시에서 해당 post 제거
