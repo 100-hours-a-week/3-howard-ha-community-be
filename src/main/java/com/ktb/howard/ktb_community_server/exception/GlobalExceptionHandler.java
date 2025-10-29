@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.auth.exception.InvalidAuthResponseTypeException;
 import com.ktb.howard.ktb_community_server.auth.exception.SessionNotFoundException;
 import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
@@ -138,6 +139,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<String> handleInvalidRequestException(InvalidRequestException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(InvalidAuthResponseTypeException.class)
+    public ResponseEntity<String> handleInvalidAuthResponseTypeException(InvalidAuthResponseTypeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
 }

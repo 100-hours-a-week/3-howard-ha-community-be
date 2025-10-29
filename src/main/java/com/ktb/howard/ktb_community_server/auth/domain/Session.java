@@ -4,6 +4,9 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
+/**
+ * Redis에 저장하여 관리하는 세션정보
+ */
 @Builder
 @RedisHash(value = "session", timeToLive = 3600)
 @Getter @Setter
@@ -18,8 +21,6 @@ public class Session {
     private Integer memberId;
 
     private String email;
-
-    private String nickname;
 
     private MemberRole role;
 

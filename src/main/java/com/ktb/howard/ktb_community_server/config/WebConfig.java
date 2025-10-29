@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    private final AuthMemberArgumentResolver authMemberArgumentResolver;
+    private final AuthArgumentResolver authArgumentResolver;
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
@@ -36,7 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(authMemberArgumentResolver);
+        resolvers.add(authArgumentResolver);
     }
 
 }

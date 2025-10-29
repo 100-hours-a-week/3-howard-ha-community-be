@@ -1,7 +1,9 @@
 package com.ktb.howard.ktb_community_server.filter;
 
 import com.ktb.howard.ktb_community_server.auth.domain.Session;
-import com.ktb.howard.ktb_community_server.auth.service.SessionService;
+import com.ktb.howard.ktb_community_server.auth.dto.AuthResponseDto;
+import com.ktb.howard.ktb_community_server.auth.service.AuthService;
+import com.ktb.howard.ktb_community_server.auth.service.SessionAuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,9 +21,10 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Component
+@ConditionalOnProperty(name = "app.auth.method", havingValue = "session")
 public class SessionAuthFilter extends OncePerRequestFilter {
 
-    private final SessionService sessionService;
+    private final AuthService authService;
     public static final String SESSION_COOKIE_NAME = "JSESSIONID";
     public static final String ATTRIBUTE_NAME = "AUTH_MEMBER";
 
@@ -85,7 +89,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             return;
         }
         String sessionId = sessionIdOpt.get(); // session id를 추출
-        Optional<Session> sessionOpt = sessionService.findSessionAndSlide(sessionId);
+        Optional<AuthResponseDto> sessionOpt = authService.refresh(sessionId);
         if (sessionOpt.isEmpty()) {
             sendUnauthorizedError(response, "유효하지 않은 세션입니다. 다시 로그인해주세요.");
             return;

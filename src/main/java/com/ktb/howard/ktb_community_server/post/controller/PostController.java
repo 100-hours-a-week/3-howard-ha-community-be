@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.post.controller;
 
 import com.ktb.howard.ktb_community_server.auth.annotation.AuthMember;
 import com.ktb.howard.ktb_community_server.auth.domain.Session;
+import com.ktb.howard.ktb_community_server.auth.dto.AuthResponseDto;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.post.dto.*;
 import com.ktb.howard.ktb_community_server.post.service.PostService;
@@ -22,11 +23,11 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<CreatePostResponseDto> createPost(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @Valid @RequestBody CreatePostRequestDto request
     ) {
         CreatePostResponseDto response = postService.createPost(
-                session.getMemberId(),
+                responseDto.getMemberId(),
                 request.title(),
                 request.content(),
                 request.postImages()
@@ -47,31 +48,31 @@ public class PostController {
 
     @GetMapping("/{postId}")
     public ResponseEntity<PostDetailDto> getPostDetail(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long postId
     ) {
-        PostDetailDto response = postService.getPostDetail(postId, session.getMemberId());
+        PostDetailDto response = postService.getPostDetail(postId, responseDto.getMemberId());
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{postId}/like")
     public ResponseEntity<String> likePost(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long postId,
             @RequestParam("type") LikeLogType type
     ) {
-        postService.likePost(postId, session.getMemberId(), type);
+        postService.likePost(postId, responseDto.getMemberId(), type);
         return ResponseEntity.ok("");
     }
 
     @PatchMapping("/{postId}")
     public ResponseEntity<String> updatePost(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long postId,
             @RequestBody PostUpdateRequestDto request
     ) {
         postService.updatePost(
-                session.getMemberId(),
+                responseDto.getMemberId(),
                 postId,
                 request.getTitle(),
                 request.getContent(),
@@ -82,10 +83,10 @@ public class PostController {
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<String> deletePostById(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long postId
     ) {
-        postService.deletePostById(session.getMemberId(), postId);
+        postService.deletePostById(responseDto.getMemberId(), postId);
         return ResponseEntity.ok("게시글이 삭제되었습니다.");
     }
 
