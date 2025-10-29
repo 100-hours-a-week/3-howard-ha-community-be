@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.comment.controller;
 
 import com.ktb.howard.ktb_community_server.auth.annotation.AuthMember;
 import com.ktb.howard.ktb_community_server.auth.domain.Session;
+import com.ktb.howard.ktb_community_server.auth.dto.AuthResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentRequestDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
@@ -24,13 +25,13 @@ public class CommentController {
 
     @PostMapping("/{postId}/comments")
     public ResponseEntity<CreateCommentResponseDto> createComment(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequestDto request
     ) {
         CreateCommentResponseDto response = commentService.createComment(
                 postId,
-                session.getMemberId(),
+                responseDto.getMemberId(),
                 request.parentCommentId(),
                 request.content()
         );
