@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.post.service;
 
 import com.ktb.howard.ktb_community_server.cache.repository.LikeCountCacheRepository;
 import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheRepository;
+import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
 import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.domain.ImageStatus;
 import com.ktb.howard.ktb_community_server.image.domain.ImageType;
@@ -19,7 +20,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -375,7 +375,7 @@ class PostServiceTest {
 
         // when // then
         assertThatThrownBy(() -> postService.deletePostById(writer.getId() + 1, post.getId()))
-                .isInstanceOf(AccessDeniedException.class)
+                .isInstanceOf(InvalidRequestException.class)
                 .hasMessage("올바르지 않은 요청입니다.");
     }
 

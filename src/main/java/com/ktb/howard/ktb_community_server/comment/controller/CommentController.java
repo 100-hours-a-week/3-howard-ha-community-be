@@ -56,21 +56,22 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/comments/{commentId}")
     public ResponseEntity<String> updateComment(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequestDto request
     ) {
-        commentService.updateComment(session.getMemberId(), commentId, request.content());
+        commentService.updateComment(responseDto.getMemberId(), commentId, request.content());
         return ResponseEntity.status(200).body("댓글이 수정되었습니다.");
     }
 
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<String> deleteComment(
-            @AuthMember Session session,
+            @AuthMember AuthResponseDto responseDto,
             @PathVariable Long commentId
     ) {
-        commentService.softDeleteByCommentId(session.getMemberId(), commentId);
+        commentService.softDeleteByCommentId(responseDto.getMemberId(), commentId);
         return ResponseEntity.status(200).body("댓글이 삭제되었습니다.");
     }
 

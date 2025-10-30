@@ -1,6 +1,8 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.auth.exception.AuthArgumentNotFoundException;
 import com.ktb.howard.ktb_community_server.auth.exception.InvalidAuthResponseTypeException;
+import com.ktb.howard.ktb_community_server.auth.exception.RefreshTokenNotFoundException;
 import com.ktb.howard.ktb_community_server.auth.exception.SessionNotFoundException;
 import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
@@ -143,6 +145,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidAuthResponseTypeException.class)
     public ResponseEntity<String> handleInvalidAuthResponseTypeException(InvalidAuthResponseTypeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+    public ResponseEntity<String> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuthArgumentNotFoundException.class)
+    public ResponseEntity<String> handleAuthArgumentNotFoundException(AuthArgumentNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

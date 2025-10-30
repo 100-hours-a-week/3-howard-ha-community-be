@@ -5,6 +5,7 @@ import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
 import com.ktb.howard.ktb_community_server.comment.service.CommentService;
+import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -298,7 +298,7 @@ class CommentServiceTest {
         // when // then
         String updatedContent = "수정된 댓글";
         assertThatThrownBy(() -> commentService.updateComment(member.getId() + 1, comment.getId(), updatedContent))
-                .isInstanceOf(AccessDeniedException.class)
+                .isInstanceOf(InvalidRequestException.class)
                 .hasMessage("올바르지 않은 요청입니다.");
     }
 
@@ -363,7 +363,7 @@ class CommentServiceTest {
 
         // when // then
         assertThatThrownBy(() -> commentService.softDeleteByCommentId(member.getId() + 1, parentComment.getId()))
-                .isInstanceOf(AccessDeniedException.class)
+                .isInstanceOf(InvalidRequestException.class)
                 .hasMessage("올바르지 않은 요청입니다.");
     }
 
