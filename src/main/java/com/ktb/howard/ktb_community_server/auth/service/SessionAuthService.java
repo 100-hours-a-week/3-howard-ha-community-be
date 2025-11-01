@@ -4,6 +4,8 @@ import com.ktb.howard.ktb_community_server.auth.domain.MemberRole;
 import com.ktb.howard.ktb_community_server.auth.domain.Session;
 import com.ktb.howard.ktb_community_server.auth.dto.AuthResponseDto;
 import com.ktb.howard.ktb_community_server.auth.dto.SessionResponseDto;
+import com.ktb.howard.ktb_community_server.auth.exception.SessionIdNotFoundInRequestException;
+import com.ktb.howard.ktb_community_server.auth.exception.SessionNotFoundException;
 import com.ktb.howard.ktb_community_server.auth.repository.SessionRepository;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
@@ -24,8 +26,15 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.ktb.howard.ktb_community_server.auth.service.CookieProvider.*;
+import static com.ktb.howard.ktb_community_server.api.AuthErrorCode.SESSION_ID_NOT_FOUND_IN_REQUEST;
+import static com.ktb.howard.ktb_community_server.api.AuthErrorCode.SESSION_NOT_FOUND;
+import static com.ktb.howard.ktb_community_server.api.MemberErrorCode.MEMBER_NOT_FOUND;
+import static com.ktb.howard.ktb_community_server.api.MemberErrorCode.PASSWORD_NOT_MATCHED;
+import static com.ktb.howard.ktb_community_server.auth.provider.CookieProvider.*;
 
+/**
+ * 세션 기반 인증 관련 로직을 처리하는 Service
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class SessionAuthService implements AuthService {
@@ -39,12 +48,11 @@ public class SessionAuthService implements AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponseDto login(String email, String password) {
-        // 1. 유효한 회원인지 확인
+        // 1. 입력한 이메일, 비밀번호 검증
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("입력한 이메일 또는 비밀번호를 확인해주세요."));
+                .orElseThrow(() -> new MemberNotFoundException(MEMBER_NOT_FOUND));
         if (!checkPassword(member, password)) {
-            log.info("비밀번호 불일치");
-            throw new PasswordNotMatchedException("입력한 이메일 또는 비밀번호를 확인해주세요.");
+            throw new PasswordNotMatchedException(PASSWORD_NOT_MATCHED);
         }
         // 2. 유효한 회원인 경우 세션ID 발급
         String newSessionId = UUID.randomUUID().toString();
@@ -67,30 +75,27 @@ public class SessionAuthService implements AuthService {
 
     @Override
     public Optional<AuthResponseDto> refresh(String sessionId) {
-        Optional<Session> sessionOpt = sessionRepository.findById(sessionId);
-        if (sessionOpt.isPresent()) {
-            // 2. RedisTemplate을 통해 EXPIRE 명령어 실행 (슬라이딩)
-            String redisKey = Session.KEY_PREFIX + ":" + sessionId;
-            redisTemplate.expire(redisKey, sessionTtlSec, TimeUnit.SECONDS);
-            Session session = sessionOpt.get();
-            return Optional.of(
-                    SessionResponseDto.builder()
-                            .sessionId(session.getSessionId())
-                            .memberId(session.getMemberId())
-                            .email(session.getEmail())
-                            .role(session.getRole())
-                            .build()
-            );
-        }
-        return Optional.empty();
+        // 1. refresh 상 대상 Session 탐색
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new SessionNotFoundException(SESSION_NOT_FOUND));
+        // 2. RedisTemplate을 통해 EXPIRE 명령어 실행 (슬라이딩)
+        String redisKey = Session.KEY_PREFIX + ":" + sessionId;
+        redisTemplate.expire(redisKey, sessionTtlSec, TimeUnit.SECONDS);
+        // 3. refresh 한 Session 정보 구성하여 반환
+        SessionResponseDto sessionResponse = SessionResponseDto.builder()
+                .sessionId(session.getSessionId())
+                .memberId(session.getMemberId())
+                .email(session.getEmail())
+                .role(session.getRole())
+                .build();
+        return Optional.of(sessionResponse);
     }
 
     // 로그아웃 수행
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        Optional<String> sessionIdOpt = getSessionId(request);
-        if (sessionIdOpt.isEmpty()) return;
-        String sessionId = sessionIdOpt.get();
+        String sessionId = getSessionId(request)
+                .orElseThrow(() -> new SessionIdNotFoundInRequestException(SESSION_ID_NOT_FOUND_IN_REQUEST));
         sessionRepository.deleteById(sessionId);
     }
 
@@ -99,6 +104,7 @@ public class SessionAuthService implements AuthService {
         return passwordEncoder.matches(rawPassword, member.getPassword());
     }
 
+    // Cookie에 들어있는 Session ID를 획득
     private Optional<String> getSessionId(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
@@ -106,7 +112,7 @@ public class SessionAuthService implements AuthService {
         }
         return Arrays.stream(cookies)
                 .filter(cookie -> cookie.getName().equals(SESSION_ID_COOKIE_NAME))
-                .map(Cookie::getValue) // 쿠키의 값(세션 ID)을 추출
+                .map(Cookie::getValue)
                 .findFirst();
     }
 

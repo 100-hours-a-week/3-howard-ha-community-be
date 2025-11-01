@@ -1,4 +1,4 @@
-package com.ktb.howard.ktb_community_server.auth.service;
+package com.ktb.howard.ktb_community_server.auth.provider;
 
 import com.ktb.howard.ktb_community_server.auth.domain.MemberRole;
 import io.jsonwebtoken.Claims;

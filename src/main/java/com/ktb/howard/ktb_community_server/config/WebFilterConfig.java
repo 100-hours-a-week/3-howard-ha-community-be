@@ -1,7 +1,7 @@
 package com.ktb.howard.ktb_community_server.config;
 
 import com.ktb.howard.ktb_community_server.auth.service.AuthService;
-import com.ktb.howard.ktb_community_server.auth.service.JwtProvider;
+import com.ktb.howard.ktb_community_server.auth.provider.JwtProvider;
 import com.ktb.howard.ktb_community_server.filter.JwtAuthFilter;
 import com.ktb.howard.ktb_community_server.filter.SessionAuthFilter;
 import jakarta.servlet.Filter;

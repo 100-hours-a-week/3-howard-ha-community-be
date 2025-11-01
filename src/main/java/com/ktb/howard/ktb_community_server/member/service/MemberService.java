@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ktb.howard.ktb_community_server.api.MemberErrorCode.*;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -77,7 +79,7 @@ public class MemberService {
                 memberId.longValue()
         );
         Member member = memberRepository.findById(memberId.longValue())
-                .orElseThrow(() -> new MemberNotFoundException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new MemberNotFoundException(MEMBER_NOT_FOUND));
         String profileImageUrl = null;
         Long imageId = null;
         String email = null;
@@ -109,7 +111,7 @@ public class MemberService {
         // 1. 수정할 대상인 회원정보를 불러옴
         Member member = memberRepository.findById(memberId.longValue()).orElseThrow(() -> {
             log.error("수정할 회원정보 없음 : memberId={}", memberId);
-            return new MemberNotFoundException("수정할 회원정보가 없습니다.");
+            return new MemberNotFoundException(MEMBER_NOT_FOUND);
         });
         // 2. 닉네임에 대한 변경요청이 있는 경우 업데이트를 진행함
         if (nickname != null) {
@@ -123,7 +125,7 @@ public class MemberService {
             // 3-1. 현재 비밀번호를 올바르게 입력했는 지 먼저 확인
             if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
                 log.info("비밀번호 변경을 요청하는 기존 비밀번호 불일치 : memberId={}", memberId);
-                throw new PasswordNotMatchedException("비밀번호 변경을 요청하는 기존 비밀번호 불일치");
+                throw new PasswordNotMatchedException(PASSWORD_NOT_MATCHED);
             }
             // 3-2. 비밀번호에 대한 업데이트 진행
             member.updatePassword(passwordEncoder.encode(newPassword));

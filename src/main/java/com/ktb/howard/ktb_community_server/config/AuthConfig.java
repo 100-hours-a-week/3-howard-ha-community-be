@@ -4,7 +4,7 @@ import com.ktb.howard.ktb_community_server.auth.repository.JwtRepository;
 import com.ktb.howard.ktb_community_server.auth.repository.SessionRepository;
 import com.ktb.howard.ktb_community_server.auth.service.AuthService;
 import com.ktb.howard.ktb_community_server.auth.service.JwtAuthService;
-import com.ktb.howard.ktb_community_server.auth.service.JwtProvider;
+import com.ktb.howard.ktb_community_server.auth.provider.JwtProvider;
 import com.ktb.howard.ktb_community_server.auth.service.SessionAuthService;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

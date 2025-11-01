@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.post_like.service;
 
+import com.ktb.howard.ktb_community_server.api.MemberErrorCode;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+
+import static com.ktb.howard.ktb_community_server.api.MemberErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -44,7 +47,7 @@ public class PostLikeService {
             Member member = memberRepository.findById(memberId.longValue())
                     .orElseThrow(() -> {
                         log.error("존재하지 않는 회원 : memberId={}", memberId);
-                        return new MemberNotFoundException("존재하지 않는 회원입니다.");
+                        return new MemberNotFoundException(MEMBER_NOT_FOUND);
                     });
             PostLike newPostLike = PostLike.builder()
                     .member(member)

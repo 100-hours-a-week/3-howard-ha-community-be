@@ -2,7 +2,7 @@ package com.ktb.howard.ktb_community_server.filter;
 
 import com.ktb.howard.ktb_community_server.auth.domain.MemberRole;
 import com.ktb.howard.ktb_community_server.auth.dto.JwtResponseDto;
-import com.ktb.howard.ktb_community_server.auth.service.JwtProvider;
+import com.ktb.howard.ktb_community_server.auth.provider.JwtProvider;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

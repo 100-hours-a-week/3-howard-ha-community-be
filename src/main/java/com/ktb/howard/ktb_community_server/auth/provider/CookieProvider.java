@@ -1,6 +1,5 @@
-package com.ktb.howard.ktb_community_server.auth.service;
+package com.ktb.howard.ktb_community_server.auth.provider;
 
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
