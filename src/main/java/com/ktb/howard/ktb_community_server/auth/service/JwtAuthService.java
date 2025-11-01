@@ -16,15 +16,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.Optional;
 
-import static com.ktb.howard.ktb_community_server.filter.JwtAuthFilter.REFRESH_TOKEN_COOKIE_NAME;
+import static com.ktb.howard.ktb_community_server.auth.service.CookieProvider.REFRESH_TOKEN_COOKIE_NAME;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,10 +30,7 @@ public class JwtAuthService implements AuthService {
     private final MemberRepository memberRepository;
     private final JwtRepository jwtRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final JwtProvider jwtProvider;
-    @Value("${app.auth.cookie.secure:true}")
-    private boolean isCookieSecure;
 
     @Override
     public AuthResponseDto login(String email, String password) {

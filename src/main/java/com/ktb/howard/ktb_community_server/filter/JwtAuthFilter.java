@@ -20,8 +20,6 @@ import java.util.Optional;
 public class JwtAuthFilter extends BaseAuthFilter {
 
     private final JwtProvider jwtProvider;
-    public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    public static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     public static final String ATTRIBUTE_NAME = "AUTH_MEMBER";
 
     @Override

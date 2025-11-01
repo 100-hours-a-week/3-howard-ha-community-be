@@ -2,6 +2,7 @@ package com.ktb.howard.ktb_community_server.filter;
 
 import com.ktb.howard.ktb_community_server.auth.dto.AuthResponseDto;
 import com.ktb.howard.ktb_community_server.auth.service.AuthService;
+import com.ktb.howard.ktb_community_server.auth.service.CookieProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -14,11 +15,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static com.ktb.howard.ktb_community_server.auth.service.CookieProvider.*;
+
 @RequiredArgsConstructor
 public class SessionAuthFilter extends BaseAuthFilter {
 
     private final AuthService authService;
-    public static final String SESSION_COOKIE_NAME = "JSESSIONID";
     public static final String ATTRIBUTE_NAME = "AUTH_MEMBER";
 
     // 2. 실제 필터링 로직
@@ -49,7 +51,7 @@ public class SessionAuthFilter extends BaseAuthFilter {
             return Optional.empty();
         }
         return Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(SESSION_COOKIE_NAME))
+                .filter(cookie -> cookie.getName().equals(SESSION_ID_COOKIE_NAME))
                 .map(Cookie::getValue) // 쿠키의 값(세션 ID)을 추출
                 .findFirst();
     }

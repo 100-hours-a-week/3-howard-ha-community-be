@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.ktb.howard.ktb_community_server.filter.SessionAuthFilter.SESSION_COOKIE_NAME;
+import static com.ktb.howard.ktb_community_server.auth.service.CookieProvider.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,8 +34,8 @@ public class SessionAuthService implements AuthService {
     private final SessionRepository sessionRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
-    @Value("${app.auth.cookie.secure:true}")
-    private boolean isCookieSecure;
+    @Value("${app.auth.session.session-ttl-sec}")
+    private Long sessionTtlSec;
 
     @Transactional(readOnly = true)
     public AuthResponseDto login(String email, String password) {
@@ -72,7 +71,7 @@ public class SessionAuthService implements AuthService {
         if (sessionOpt.isPresent()) {
             // 2. RedisTemplate을 통해 EXPIRE 명령어 실행 (슬라이딩)
             String redisKey = Session.KEY_PREFIX + ":" + sessionId;
-            redisTemplate.expire(redisKey, 3_600, TimeUnit.SECONDS);
+            redisTemplate.expire(redisKey, sessionTtlSec, TimeUnit.SECONDS);
             Session session = sessionOpt.get();
             return Optional.of(
                     SessionResponseDto.builder()
@@ -89,20 +88,10 @@ public class SessionAuthService implements AuthService {
     // 로그아웃 수행
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        // 헤더를 보고 세션ID 획득 후 세션 스토어에서 세션정보 삭제
         Optional<String> sessionIdOpt = getSessionId(request);
         if (sessionIdOpt.isEmpty()) return;
         String sessionId = sessionIdOpt.get();
         sessionRepository.deleteById(sessionId);
-        // 세션 관련 쿠키 무효화
-        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, null)
-                .maxAge(0)
-                .path("/")
-                .httpOnly(true)
-                .secure(isCookieSecure)
-                .sameSite("None")
-                .build();
-        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     // 특정 사용자와 매칭되는 비밀번호인지 검증
@@ -116,7 +105,7 @@ public class SessionAuthService implements AuthService {
             return Optional.empty();
         }
         return Arrays.stream(cookies)
-                .filter(cookie -> cookie.getName().equals(SESSION_COOKIE_NAME))
+                .filter(cookie -> cookie.getName().equals(SESSION_ID_COOKIE_NAME))
                 .map(Cookie::getValue) // 쿠키의 값(세션 ID)을 추출
                 .findFirst();
     }

@@ -39,10 +39,9 @@ public class AuthConfig {
             MemberRepository memberRepository,
             JwtRepository jwtRepository,
             PasswordEncoder passwordEncoder,
-            RedisTemplate<String, Object> redisTemplate,
             JwtProvider jwtProvider
     ) {
-        return new JwtAuthService(memberRepository, jwtRepository, passwordEncoder, redisTemplate, jwtProvider);
+        return new JwtAuthService(memberRepository, jwtRepository, passwordEncoder, jwtProvider);
     }
 
 }
