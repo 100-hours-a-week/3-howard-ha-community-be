@@ -2,7 +2,6 @@ package com.ktb.howard.ktb_community_server.auth.controller;
 
 import com.ktb.howard.ktb_community_server.api.ApiResponse;
 import com.ktb.howard.ktb_community_server.auth.dto.*;
-import com.ktb.howard.ktb_community_server.auth.exception.AuthArgumentNotFoundException;
 import com.ktb.howard.ktb_community_server.auth.exception.InvalidAuthResponseTypeException;
 import com.ktb.howard.ktb_community_server.auth.exception.RefreshTokenNotFoundException;
 import com.ktb.howard.ktb_community_server.auth.exception.SessionNotFoundException;
@@ -83,12 +82,12 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(
+    public ResponseEntity<ApiResponse<?>> refresh(
             @CookieValue(name = SESSION_ID_COOKIE_NAME, required = false) String sessionId,
             @CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
-        if (sessionId != null) { // 세션 기반 인증의 refresh 요청인 경우 - 세션 슬라이드
+        if (authService instanceof SessionAuthService) {
             Optional<AuthResponseDto> refreshResponseDtoOpt = authService.refresh(sessionId);
             if (refreshResponseDtoOpt.isEmpty()) {
                 throw new SessionNotFoundException(SESSION_NOT_FOUND);
@@ -97,8 +96,9 @@ public class AuthController {
             ResponseCookie cookie = cookieProvider.createSessionCookie(sessionResponseDto.getSessionId());
             response.addHeader("Set-Cookie", cookie.toString());
             URI location = URI.create("/auth/me");
-            return ResponseEntity.created(location).body(null);
-        } else if (refreshToken != null) { // JWT 기반 인증의 refresh 요청인 경우
+            ApiResponse<JwtLoginResponseDto> responseBody = ApiResponse.onSuccess();
+            return ResponseEntity.created(location).body(responseBody);
+        } else if (authService instanceof JwtAuthService) {
             Optional<AuthResponseDto> refreshResponseDtoOpt = authService.refresh(refreshToken);
             if (refreshResponseDtoOpt.isEmpty()) {
                 throw new RefreshTokenNotFoundException(REFRESH_TOKEN_NOT_FOUND);
@@ -107,21 +107,21 @@ public class AuthController {
             ResponseCookie cookie = cookieProvider.createAccessTokenCookie(jwtResponseDto.getAccessToken());
             response.addHeader("Set-Cookie", cookie.toString());
             URI location = URI.create("/auth/me");
-            return ResponseEntity.created(location).body(
-                    JwtLoginResponseDto.builder()
-                            .member(
-                                    LoginMemberInfoDto.builder()
-                                            .id(jwtResponseDto.getMemberId())
-                                            .email(jwtResponseDto.getEmail())
-                                            .nickname(jwtResponseDto.getNickname())
-                                            .build()
-                            )
-                            .accessToken(jwtResponseDto.getAccessToken())
-                            .message("새로운 Access Token이 발급되었습니다.")
-                            .build()
-            );
+            JwtLoginResponseDto jwtLoginResponseDto = JwtLoginResponseDto.builder()
+                    .member(
+                            LoginMemberInfoDto.builder()
+                                    .id(jwtResponseDto.getMemberId())
+                                    .email(jwtResponseDto.getEmail())
+                                    .nickname(jwtResponseDto.getNickname())
+                                    .build()
+                    )
+                    .accessToken(jwtResponseDto.getAccessToken())
+                    .message("새로운 Access Token이 발급되었습니다.")
+                    .build();
+            ApiResponse<JwtLoginResponseDto> responseBody = ApiResponse.onSuccess(jwtLoginResponseDto);
+            return ResponseEntity.created(location).body(responseBody);
         } else {
-            throw new AuthArgumentNotFoundException(AUTH_ARGUMENT_NOT_FOUND);
+            throw new InvalidAuthResponseTypeException(INVALID_AUTH_RESPONSE_TYPE);
         }
     }
 
