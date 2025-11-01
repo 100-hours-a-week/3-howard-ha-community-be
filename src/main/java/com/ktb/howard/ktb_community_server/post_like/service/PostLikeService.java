@@ -1,6 +1,8 @@
 package com.ktb.howard.ktb_community_server.post_like.service;
 
+import com.ktb.howard.ktb_community_server.api.LikeLogErrorCode;
 import com.ktb.howard.ktb_community_server.api.MemberErrorCode;
+import com.ktb.howard.ktb_community_server.api.PostErrorCode;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
@@ -20,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+import static com.ktb.howard.ktb_community_server.api.LikeLogErrorCode.*;
 import static com.ktb.howard.ktb_community_server.api.MemberErrorCode.*;
+import static com.ktb.howard.ktb_community_server.api.PostErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,7 +46,7 @@ public class PostLikeService {
             Post post = postRepository.findById(postId)
                     .orElseThrow(() -> {
                         log.error("존재하지 않는 게시글 : postId={}", postId);
-                        return new PostNotFoundException("존재하지 않는 게시글입니다.");
+                        return new PostNotFoundException(POST_NOT_FOUND);
                     });
             Member member = memberRepository.findById(memberId.longValue())
                     .orElseThrow(() -> {
@@ -62,7 +66,7 @@ public class PostLikeService {
             postLikeRepository.delete(deletePostLike);
         } else {
             log.error("유효하지 않은 좋아요 로그 타입 : {}", type);
-            throw new InvalidLikeLogTypeException("유효하지 않은 좋아요 로그 타입입니다.");
+            throw new InvalidLikeLogTypeException(INVALID_LIKE_LOG_TYPE);
         }
     }
 

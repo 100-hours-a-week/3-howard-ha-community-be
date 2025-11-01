@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.api.ApiResponse;
 import com.ktb.howard.ktb_community_server.auth.exception.AuthArgumentNotFoundException;
 import com.ktb.howard.ktb_community_server.auth.exception.InvalidAuthResponseTypeException;
 import com.ktb.howard.ktb_community_server.auth.exception.RefreshTokenNotFoundException;
@@ -103,16 +104,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(PostNotFoundException.class)
-    public ResponseEntity<String> handlePostNotFoundException(PostNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(InvalidLikeLogTypeException.class)
-    public ResponseEntity<String> handleInvalidLikeLogTypeException(InvalidLikeLogTypeException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(PostLikeNotFoundException.class)
     public ResponseEntity<String> handlePostLikeNotFoundException(PostLikeNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
@@ -124,8 +115,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidRequestException.class)
-    public ResponseEntity<String> handleInvalidRequestException(InvalidRequestException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ApiResponse<?>> handleInvalidRequestException(InvalidRequestException ex) {
+        ApiResponse<?> response = ApiResponse.onFailure(ex.getErrorCode());
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(RefreshTokenNotFoundException.class)

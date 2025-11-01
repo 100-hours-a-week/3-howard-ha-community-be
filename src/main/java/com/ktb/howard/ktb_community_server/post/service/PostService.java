@@ -5,17 +5,18 @@ import com.ktb.howard.ktb_community_server.cache.repository.LikeCountCacheReposi
 import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheRepository;
 import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
 import com.ktb.howard.ktb_community_server.image.domain.Image;
-import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.like_log.service.LikeLogService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
 import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
+import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
 import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.*;
+import com.ktb.howard.ktb_community_server.post.exception.PostImageNotFoundException;
 import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
 import com.ktb.howard.ktb_community_server.post.repository.PostQueryRepository;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
@@ -32,6 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.ktb.howard.ktb_community_server.api.CommonErrorCode.INVALID_REQUEST;
+import static com.ktb.howard.ktb_community_server.api.LikeLogErrorCode.INVALID_LIKE_LOG_TYPE;
+import static com.ktb.howard.ktb_community_server.api.MemberErrorCode.*;
+import static com.ktb.howard.ktb_community_server.api.PostErrorCode.*;
+import static com.ktb.howard.ktb_community_server.image.domain.ImageType.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -56,24 +63,26 @@ public class PostService {
             String content,
             List<PostImageRequestInfoDto> postImages
     ) {
-        Member writer = memberRepository.getReferenceById(memberId.longValue());
+        // 1. 작성자 정보 조회
+        Member writer = memberRepository.findById(memberId.longValue())
+                .orElseThrow(() -> new MemberNotFoundException(MEMBER_NOT_FOUND));
+        // 2. Post Entity 구성 및 저장
         Post post = Post.builder()
                 .writer(writer)
                 .title(title)
                 .content(content)
                 .build();
         postRepository.save(post);
-
+        // 3. 임시 공간에 존재하는 게시글 이미지 영속화
         if (postImages != null && !postImages.isEmpty()) {
             postImages.forEach(i -> {
                 if (!imageService.isExist(i.imageId())) {
                     log.error("이미지 {}가 존재하지 않습니다.", i.imageId());
-                    throw new IllegalStateException(String.format("이미지 %d가 존재하지 않습니다.", i.imageId()));
+                    throw new PostImageNotFoundException(POST_IMAGE_NOT_FOUND);
                 }
                 imageService.persistImage(i.imageId(), writer, post.getId(), i.sequence());
             });
         }
-
         return new CreatePostResponseDto(
                 post.getId(),
                 writer.getId(),
@@ -109,10 +118,10 @@ public class PostService {
         PostDetailWithLikeInfoDto postDetail = postQueryRepository.getPostDetail(postId, requestMemberId)
                 .orElseThrow(() -> {
                     log.error("찾을 수 없는 게시글 = {}", postId);
-                    return new PostNotFoundException("존재하지 않는 게시글입니다.");
+                    return new PostNotFoundException(POST_NOT_FOUND);
                 });
         MemberInfoResponseDto profile = memberService.getProfile(postDetail.writerId());
-        List<PostImageInfoDto> postImages = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(ImageType.POST, postId))
+        List<PostImageInfoDto> postImages = imageService.createImageViewUrl(new CreateImageViewUrlRequestDto(POST, postId))
                 .stream()
                 .map(pi -> new PostImageInfoDto(pi.imageId(), pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
@@ -143,7 +152,7 @@ public class PostService {
             likeCountCacheRepository.decreaseCount(postId);
         } else {
             log.error("유효하지 않은 좋아요 로그 타입 : {}", type);
-            throw new InvalidLikeLogTypeException("유효하지 않은 좋아요 로그 타입입니다.");
+            throw new InvalidLikeLogTypeException(INVALID_LIKE_LOG_TYPE);
         }
     }
 
@@ -158,12 +167,12 @@ public class PostService {
         // 1. 수정할 대상인 게시글 정보를 불러옴
         Post post = postRepository.findById(postId).orElseThrow(() -> {
             log.error("수정할 게시글을 찾을 수 없음 : postId={}", postId);
-            return new PostNotFoundException("수정할 게시글을 찾을 수 없습니다.");
+            return new PostNotFoundException(POST_NOT_FOUND);
         });
         // 2. 현재 요청자가 해당 게시글을 수정할 권한이 있는 지 확인
         if (!loginMemberId.equals(post.getWriter().getId())) {
             log.error("올바르지 않은 요청 : loginMemberId={}, postWriterId={}", loginMemberId, post.getWriter().getId());
-            throw new InvalidRequestException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException(INVALID_REQUEST);
         }
         // 3. 제목에 대한 변경요청이 있는 경우 업데이트를 진행함
         if (!Strings.isNullOrEmpty(title)) {
@@ -176,7 +185,7 @@ public class PostService {
         // 5. 게시글 이미지에 대한 변경 요청이 있는 경우 업데이트를 진행함
         if (requestImages != null) {
             // 5-1. 기존 이미지들을 ID를 Key로 하는 Map으로 변환
-            Map<Long, Image> existingImageMap = imageService.findImages(ImageType.POST, postId).stream()
+            Map<Long, Image> existingImageMap = imageService.findImages(POST, postId).stream()
                     .collect(Collectors.toMap(Image::getId, Function.identity()));
 
             // 3-2. 요청된 이미지 ID Set 생성 (삭제 대상 식별용)
@@ -210,9 +219,9 @@ public class PostService {
     @Transactional
     public void deletePostById(Integer loginMemberId, Long postId) {
         Post findPost = postRepository.findById(postId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 게시글입니다."));
+                .orElseThrow(() -> new PostNotFoundException(POST_NOT_FOUND));
         if (!loginMemberId.equals(findPost.getWriter().getId())) {
-            throw new InvalidRequestException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException(INVALID_REQUEST);
         }
         likeCountCacheRepository.remove(postId); // 좋아요 수 캐시에서 해당 post 제거
         viewCountCacheRepository.remove(postId); // 조회수 캐시에서 해당 post 제거

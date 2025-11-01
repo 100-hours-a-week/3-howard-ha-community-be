@@ -22,6 +22,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import static com.ktb.howard.ktb_community_server.api.CommonErrorCode.INVALID_REQUEST;
+
 @RequiredArgsConstructor
 @Service
 public class CommentService {
@@ -97,7 +99,7 @@ public class CommentService {
         Comment findComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NoSuchElementException(commentId + "에 대응하는 댓글을 찾을 수 없습니다."));
         if (!loginMemberId.equals(findComment.getMember().getId())) {
-            throw new InvalidRequestException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException(INVALID_REQUEST);
         }
         findComment.updateContent(content);
     }
@@ -107,7 +109,7 @@ public class CommentService {
         Comment findComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NoSuchElementException(commentId + "에 대응하는 댓글을 찾을 수 없습니다."));
         if (!loginMemberId.equals(findComment.getMember().getId())) {
-            throw new InvalidRequestException("올바르지 않은 요청입니다.");
+            throw new InvalidRequestException(INVALID_REQUEST);
         }
         findComment.getPost().decreaseCommentCount(); // 댓글 갯수 1감소
         findComment.updateDeletedAt(LocalDateTime.now());

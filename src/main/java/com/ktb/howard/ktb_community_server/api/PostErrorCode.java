@@ -4,13 +4,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
+import static org.springframework.http.HttpStatus.*;
+
 @Getter
 @RequiredArgsConstructor
-public enum CommonErrorCode implements BaseErrorCode {
+public enum PostErrorCode implements BaseErrorCode {
 
-    INVALID_INPUT(HttpStatus.BAD_REQUEST, "COMMON_001", "잘못된 입력 값입니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_001", "서버 내부 오류가 발생했습니다."),
-    INVALID_REQUEST(HttpStatus.UNAUTHORIZED, "COMMON_003", "올바르지 않은 요청입니다.");
+    POST_NOT_FOUND(BAD_REQUEST, "POST_ERROR_01", "게시글이 존재하지 않습니다."),
+    POST_IMAGE_NOT_FOUND(BAD_REQUEST, "POST_ERROR_02", "게시글이 존재하지 않는 이미지를 포함하고 있습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
