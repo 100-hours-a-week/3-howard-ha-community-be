@@ -25,7 +25,6 @@ public class CookieProvider {
     public static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
     public static final String BASE_COOKIE_PATH = "/";
-    public static final String REFRESH_TOKEN_COOKIE_PATH = "/auth/refresh";
 
     /* Cookie 생성 관련 */
     public ResponseCookie createSessionCookie(String sessionId) {
@@ -55,7 +54,7 @@ public class CookieProvider {
                 .from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
                 .httpOnly(isHttpOnly)
                 .secure(isCookieSecure)
-                .path(REFRESH_TOKEN_COOKIE_PATH)
+                .path(BASE_COOKIE_PATH)
                 .maxAge(refreshTokenTtlSec)
                 .sameSite(sameSite)
                 .build();
@@ -89,7 +88,7 @@ public class CookieProvider {
                 .from(REFRESH_TOKEN_COOKIE_NAME, null)
                 .httpOnly(isHttpOnly)
                 .secure(isCookieSecure)
-                .path(REFRESH_TOKEN_COOKIE_PATH)
+                .path(BASE_COOKIE_PATH)
                 .maxAge(0)
                 .sameSite(sameSite)
                 .build();
