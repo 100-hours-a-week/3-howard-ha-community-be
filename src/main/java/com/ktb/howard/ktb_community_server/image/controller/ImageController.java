@@ -1,5 +1,6 @@
 package com.ktb.howard.ktb_community_server.image.controller;
 
+import com.ktb.howard.ktb_community_server.api.ApiResponse;
 import com.ktb.howard.ktb_community_server.image.dto.*;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import lombok.RequiredArgsConstructor;
@@ -16,17 +17,21 @@ public class ImageController {
     private final ImageService imageService;
 
     @PostMapping("/upload-urls")
-    public ResponseEntity<List<ImageUrlResponseDto>> createImageUploadUrl(
+    public ResponseEntity<ApiResponse<List<ImageUrlResponseDto>>> createImageUploadUrl(
             @RequestBody CreateImageUploadUrlRequestDto request
     ) {
-        return ResponseEntity.ok(imageService.createImageUploadUrl(request));
+        List<ImageUrlResponseDto> imageUploadUrls = imageService.createImageUploadUrl(request);
+        ApiResponse<List<ImageUrlResponseDto>> response = ApiResponse.onSuccess(imageUploadUrls);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/view-urls")
-    public ResponseEntity<List<ImageUrlResponseDto>> createImageViewUrl(
+    public ResponseEntity<ApiResponse<List<ImageUrlResponseDto>>> createImageViewUrl(
             @RequestBody CreateImageViewUrlRequestDto request
     ) {
-        return ResponseEntity.ok(imageService.createImageViewUrl(request));
+        List<ImageUrlResponseDto> imageViewUrls = imageService.createImageViewUrl(request);
+        ApiResponse<List<ImageUrlResponseDto>> response = ApiResponse.onSuccess(imageViewUrls);
+        return ResponseEntity.ok(response);
     }
 
 }

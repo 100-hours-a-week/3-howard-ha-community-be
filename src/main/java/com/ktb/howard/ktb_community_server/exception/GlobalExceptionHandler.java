@@ -2,17 +2,11 @@ package com.ktb.howard.ktb_community_server.exception;
 
 import com.ktb.howard.ktb_community_server.api.ApiResponse;
 import com.ktb.howard.ktb_community_server.auth.exception.AuthArgumentNotFoundException;
-import com.ktb.howard.ktb_community_server.auth.exception.InvalidAuthResponseTypeException;
 import com.ktb.howard.ktb_community_server.auth.exception.RefreshTokenNotFoundException;
-import com.ktb.howard.ktb_community_server.auth.exception.SessionNotFoundException;
 import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
-import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
-import com.ktb.howard.ktb_community_server.member.exception.PasswordNotMatchedException;
-import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
-import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
 import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeAlreadyExistException;
 import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -74,8 +68,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(FileExtensionExtractionFailedException.class)
-    public ResponseEntity<String> handleFileExtensionExtractionException(FileExtensionExtractionFailedException ex) {
+    @ExceptionHandler(ExtensionExtractionFailedException.class)
+    public ResponseEntity<String> handleFileExtensionExtractionException(ExtensionExtractionFailedException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
@@ -84,8 +78,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(InvalidImageCountException.class)
-    public ResponseEntity<String> handleInvalidImageCountException(InvalidImageCountException ex) {
+    @ExceptionHandler(ImageCountExceededException.class)
+    public ResponseEntity<String> handleInvalidImageCountException(ImageCountExceededException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
