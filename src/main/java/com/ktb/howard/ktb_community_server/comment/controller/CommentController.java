@@ -1,7 +1,7 @@
 package com.ktb.howard.ktb_community_server.comment.controller;
 
+import com.ktb.howard.ktb_community_server.api.ApiResponse;
 import com.ktb.howard.ktb_community_server.auth.annotation.AuthMember;
-import com.ktb.howard.ktb_community_server.auth.domain.Session;
 import com.ktb.howard.ktb_community_server.auth.dto.AuthResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentRequestDto;
@@ -24,7 +24,7 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<CreateCommentResponseDto> createComment(
+    public ResponseEntity<ApiResponse<CreateCommentResponseDto>> createComment(
             @AuthMember AuthResponseDto responseDto,
             @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequestDto request
@@ -35,44 +35,49 @@ public class CommentController {
                 request.parentCommentId(),
                 request.content()
         );
+        ApiResponse<CreateCommentResponseDto> responseBody = ApiResponse.onSuccess(response);
         return ResponseEntity
                 .created(URI.create("/comments/" + response.commentId()))
-                .body(response);
+                .body(responseBody);
     }
 
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<List<CommentResponseDto>> getComments(
+    public ResponseEntity<ApiResponse<List<CommentResponseDto>>> getComments(
             @PathVariable Long postId,
             @RequestParam("cursor") Long cursor,
             @RequestParam("size") Integer size
     ) {
         List<CommentResponseDto> comments = commentService.getComments(postId, cursor, size);
-        return ResponseEntity.ok(comments);
-    }
-
-    @GetMapping("/comments/{commentId}")
-    public ResponseEntity<List<CommentResponseDto>> getChildComments(@PathVariable Long commentId) {
-        List<CommentResponseDto> response = commentService.getChildComments(commentId);
+        ApiResponse<List<CommentResponseDto>> response = ApiResponse.onSuccess(comments);
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/comments/{commentId}")
+    public ResponseEntity<ApiResponse<List<CommentResponseDto>>> getChildComments(@PathVariable Long commentId) {
+        List<CommentResponseDto> response = commentService.getChildComments(commentId);
+        ApiResponse<List<CommentResponseDto>> responseBody = ApiResponse.onSuccess(response);
+        return ResponseEntity.ok(responseBody);
+    }
+
     @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<String> updateComment(
+    public ResponseEntity<ApiResponse<String>> updateComment(
             @AuthMember AuthResponseDto responseDto,
             @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequestDto request
     ) {
         commentService.updateComment(responseDto.getMemberId(), commentId, request.content());
-        return ResponseEntity.status(200).body("댓글이 수정되었습니다.");
+        ApiResponse<String> response = ApiResponse.onSuccess("댓글이 수정되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<String> deleteComment(
+    public ResponseEntity<ApiResponse<String>> deleteComment(
             @AuthMember AuthResponseDto responseDto,
             @PathVariable Long commentId
     ) {
         commentService.softDeleteByCommentId(responseDto.getMemberId(), commentId);
-        return ResponseEntity.status(200).body("댓글이 삭제되었습니다.");
+        ApiResponse<String> response = ApiResponse.onSuccess("댓글이 삭제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
 }
