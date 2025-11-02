@@ -1,22 +1,16 @@
 package com.ktb.howard.ktb_community_server.image.exception;
 
+import com.ktb.howard.ktb_community_server.api.BaseErrorCode;
 import lombok.Getter;
 
 @Getter
 public class ImageNotFoundException extends RuntimeException {
 
-    private final Long imageId;
-    private Long referenceId;
+    private final BaseErrorCode errorCode;
 
-    public ImageNotFoundException(String message, Long imageId) {
-        super(message);
-        this.imageId = imageId;
-    }
-
-    public ImageNotFoundException(String message, Long imageId, Long referenceId) {
-        super(message);
-        this.imageId = imageId;
-        this.referenceId = referenceId;
+    public ImageNotFoundException(BaseErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
     }
 
 }

@@ -3,8 +3,9 @@ package com.ktb.howard.ktb_community_server.auth.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @Getter
 public class LoginResponseDto {

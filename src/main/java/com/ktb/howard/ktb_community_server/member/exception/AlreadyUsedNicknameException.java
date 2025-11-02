@@ -1,16 +1,16 @@
 package com.ktb.howard.ktb_community_server.member.exception;
 
+import com.ktb.howard.ktb_community_server.api.BaseErrorCode;
 import lombok.Getter;
 
 @Getter
 public class AlreadyUsedNicknameException extends RuntimeException {
 
-    private final String fieldName = "nickname";
-    private final String value;
+    private final BaseErrorCode errorCode;
 
-    public AlreadyUsedNicknameException(String message, String value) {
-        super(message);
-        this.value = value;
+    public AlreadyUsedNicknameException(BaseErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
     }
 
 }

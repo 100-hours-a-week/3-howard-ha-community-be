@@ -20,6 +20,8 @@ import com.google.common.io.Files;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.ktb.howard.ktb_community_server.api.ImageErrorCode.*;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -59,23 +61,19 @@ public class ImageService {
         if (ImageType.PROFILE.equals(request.getImageType()) && imageCount > 1
                 || ImageType.POST.equals(request.getImageType()) && imageCount > 5) {
             log.error("이미지 수량한도 초과! : 유형={}, 수량={}", request.getImageType(), imageCount);
-            throw new InvalidImageCountException("프로필 이미지는 최대 1장, 게시글 이미지는 최대 5장까지 가능합니다.");
+            throw new ImageCountExceededException(IMAGE_COUNT_EXCEEDED);
         }
         for (ImageMetadata image : request.getImageMetadataList()) {
             // MIME Type에 대한 체크를 선행
             String mimeType = image.mimeType().toLowerCase();
             if (!mimeType.startsWith("image/")) {
                 log.error("지원하지 않는 파일 형식 : mimeType={}", mimeType);
-                throw new InvalidMimeTypeException("지원하지 않는 파일 형식입니다.", image.mimeType());
+                throw new InvalidMimeTypeException(INVALID_MIME_TYPE);
             }
             // 이미지 파일 용량에 대한 체크를 선행 - 업로드 가능한 최대 이미지 용량을 1MB로 제한
             if (image.fileSize() > 1024 * 1024) {
                 log.error("이미지 용량 한도 초과! : 현재 용량={}byte", image.fileSize());
-                throw new ImageSizeExceededException(
-                        "이미지 파일의 용량은 1MB를 초과할 수 없습니다.",
-                        image.fileSize(),
-                        image.mimeType()
-                );
+                throw new ImageSizeExceededException(IMAGE_SIZE_EXCEEDED);
             }
             Image createdImage = createImage(request.getImageType(), image, ImageStatus.RESERVED);
             PresignedUrl presignedUrl = s3Service.createPutObjectPresignedUrl(
@@ -127,7 +125,7 @@ public class ImageService {
         Optional<Image> imageOpt = imageRepository.findById(imageId);
         if (imageOpt.isEmpty()) {
             log.error("존재하지 않은 이미지: imageId={}, ownerId={}, referenceId={}", imageId, owner.getId(), referenceId);
-            throw new ImageNotFoundException("존재하지 않는 이미지입니다.", imageId, referenceId);
+            throw new ImageNotFoundException(IMAGE_NOT_FOUND);
         }
         Image image = imageOpt.get();
         GenerateObjectKeyResponse persistObjectKey = generateObjectKey(
@@ -148,7 +146,7 @@ public class ImageService {
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> {
                     log.error("삭제 조치할 이미지 없음: imageId={}", imageId);
-                    return new ImageNotFoundException("삭제할 이미지가 없습니다.", imageId);
+                    return new ImageNotFoundException(IMAGE_NOT_FOUND);
                 });
         GenerateObjectKeyResponse deleteObjectKey = generateObjectKey(
                 image.getImageType(),
@@ -167,7 +165,7 @@ public class ImageService {
         String extension = Files.getFileExtension(originalFileName);
         if (Strings.isNullOrEmpty(extension)) {
             log.error("파일 확장자 추출 실패 : {}", originalFileName);
-            throw new FileExtensionExtractionFailedException("확장자 추출 실패 -> " + originalFileName, originalFileName);
+            throw new ExtensionExtractionFailedException(EXTENSION_EXTRACTION_FAILED);
         }
         if (ImageStatus.RESERVED.equals(status)) {
             fileName = UUID.randomUUID() + "." + extension;
@@ -180,7 +178,7 @@ public class ImageService {
             objectKey = (ImageType.PROFILE.equals(imageType) ? "deleted/profiles/" : "deleted/posts/") + fileName;
         } else {
             log.error("Object Key 생성 불가 상태값 = {}", status.toString());
-            throw new InvalidImageStatusException("Object Key 생성을 할 수 있는 상태값이 아닙니다.", status);
+            throw new InvalidImageStatusException(INVALID_IMAGE_STATUS);
         }
         log.info("ObjectKey 생성 : fileName={}, objectKey={}", fileName, objectKey);
         return new GenerateObjectKeyResponse(objectKey, fileName);

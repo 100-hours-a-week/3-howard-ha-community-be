@@ -1,13 +1,12 @@
 package com.ktb.howard.ktb_community_server.exception;
 
+import com.ktb.howard.ktb_community_server.api.ApiResponse;
+import com.ktb.howard.ktb_community_server.auth.exception.AuthArgumentNotFoundException;
+import com.ktb.howard.ktb_community_server.auth.exception.RefreshTokenNotFoundException;
 import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.exception.FileStorageException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedEmailException;
 import com.ktb.howard.ktb_community_server.member.exception.AlreadyUsedNicknameException;
-import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
-import com.ktb.howard.ktb_community_server.member.exception.PasswordNotMatchedException;
-import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
-import com.ktb.howard.ktb_community_server.post_like.exception.InvalidLikeLogTypeException;
 import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeAlreadyExistException;
 import com.ktb.howard.ktb_community_server.post_like.exception.PostLikeNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -69,8 +68,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(FileExtensionExtractionFailedException.class)
-    public ResponseEntity<String> handleFileExtensionExtractionException(FileExtensionExtractionFailedException ex) {
+    @ExceptionHandler(ExtensionExtractionFailedException.class)
+    public ResponseEntity<String> handleFileExtensionExtractionException(ExtensionExtractionFailedException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
@@ -79,8 +78,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(InvalidImageCountException.class)
-    public ResponseEntity<String> handleInvalidImageCountException(InvalidImageCountException ex) {
+    @ExceptionHandler(ImageCountExceededException.class)
+    public ResponseEntity<String> handleInvalidImageCountException(ImageCountExceededException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
@@ -99,21 +98,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(PostNotFoundException.class)
-    public ResponseEntity<String> handlePostNotFoundException(PostNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(MemberNotFoundException.class)
-    public ResponseEntity<String> handleMemberNotFoundException(MemberNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(InvalidLikeLogTypeException.class)
-    public ResponseEntity<String> handleInvalidLikeLogTypeException(InvalidLikeLogTypeException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(PostLikeNotFoundException.class)
     public ResponseEntity<String> handlePostLikeNotFoundException(PostLikeNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
@@ -124,8 +108,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(PasswordNotMatchedException.class)
-    public ResponseEntity<String> handlePasswordNotMatchedException(PasswordNotMatchedException ex) {
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidRequestException(InvalidRequestException ex) {
+        ApiResponse<?> response = ApiResponse.onFailure(ex.getErrorCode());
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+    public ResponseEntity<String> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuthArgumentNotFoundException.class)
+    public ResponseEntity<String> handleAuthArgumentNotFoundException(AuthArgumentNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
