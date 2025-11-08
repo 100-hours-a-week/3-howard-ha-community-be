@@ -54,13 +54,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AlreadyUsedEmailException.class)
-    public ResponseEntity<String> handleEmailConflictException(AlreadyUsedEmailException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    public ResponseEntity<ApiResponse<?>> handleEmailConflictException(AlreadyUsedEmailException ex) {
+        ApiResponse<?> response = ApiResponse.onFailure(ex.getErrorCode());
+        return ResponseEntity.status(409).body(response);
     }
 
     @ExceptionHandler(AlreadyUsedNicknameException.class)
-    public ResponseEntity<String> handleNicknameConflictException(AlreadyUsedNicknameException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    public ResponseEntity<ApiResponse<?>> handleNicknameConflictException(AlreadyUsedNicknameException ex) {
+        ApiResponse<?> response = ApiResponse.onFailure(ex.getErrorCode());
+        return ResponseEntity.status(409).body(response);
     }
 
     @ExceptionHandler(FileStorageException.class)

@@ -49,6 +49,12 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
             return true;
         }
 
+        // 로그인 대한 요청
+        if ("POST".equals(method) && path.startsWith("/auth")) {
+            return true;
+        }
+
+
         // refresh에 대한 요청
         if ("POST".equals(method) && path.startsWith("/auth/refresh")) {
             return true;
