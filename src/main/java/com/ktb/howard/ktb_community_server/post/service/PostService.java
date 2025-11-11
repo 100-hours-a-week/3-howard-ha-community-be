@@ -114,7 +114,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostDetailDto getPostDetail(Long postId, Integer requestMemberId) {
+    public PostDetailDto getPostDetail(Long postId, Integer requestMemberId, Boolean isEdit) {
         PostDetailWithLikeInfoDto postDetail = postQueryRepository.getPostDetail(postId, requestMemberId)
                 .orElseThrow(() -> {
                     log.error("찾을 수 없는 게시글 = {}", postId);
@@ -125,8 +125,10 @@ public class PostService {
                 .stream()
                 .map(pi -> new PostImageInfoDto(pi.imageId(), pi.url(), pi.sequence(), pi.expiresAt()))
                 .toList();
-        viewCountCacheRepository.increaseCount(postId); // Cache에 조회수 갱신
-        viewLogService.createViewLog(postId, requestMemberId); // 조회 이벤트에 대한 로그 추가
+        if (!isEdit) {
+            viewCountCacheRepository.increaseCount(postId); // Cache에 조회수 갱신
+            viewLogService.createViewLog(postId, requestMemberId); // 조회 이벤트에 대한 로그 추가
+        }
         return PostDetailDto.builder()
                 .postId(postId)
                 .writer(profile)

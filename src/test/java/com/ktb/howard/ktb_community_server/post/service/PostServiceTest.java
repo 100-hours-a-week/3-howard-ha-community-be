@@ -304,7 +304,7 @@ class PostServiceTest {
         imageRepository.save(image2);
 
         // when
-        PostDetailDto response = postService.getPostDetail(post.getId(), writer.getId());
+        PostDetailDto response = postService.getPostDetail(post.getId(), writer.getId(), false);
 
         // then
         assertThat(response.getPostId()).isEqualTo(post.getId());
@@ -326,7 +326,7 @@ class PostServiceTest {
         // given
 
         // when // then
-        assertThatThrownBy(() -> postService.getPostDetail(1L, 1))
+        assertThatThrownBy(() -> postService.getPostDetail(1L, 1, false))
                 .isInstanceOf(PostNotFoundException.class)
                 .hasMessage("존재하지 않는 게시글입니다.");
     }

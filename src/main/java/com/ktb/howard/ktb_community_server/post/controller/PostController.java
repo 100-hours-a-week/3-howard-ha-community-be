@@ -51,9 +51,10 @@ public class PostController {
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostDetailDto>> getPostDetail(
             @AuthMember AuthResponseDto responseDto,
-            @PathVariable Long postId
+            @PathVariable Long postId,
+            @RequestParam("isEdit") Boolean isEdit
     ) {
-        PostDetailDto response = postService.getPostDetail(postId, responseDto.getMemberId());
+        PostDetailDto response = postService.getPostDetail(postId, responseDto.getMemberId(), isEdit);
         ApiResponse<PostDetailDto> responseBody = ApiResponse.onSuccess(response);
         return ResponseEntity.ok(responseBody);
     }
