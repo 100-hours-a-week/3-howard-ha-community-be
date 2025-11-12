@@ -110,6 +110,18 @@ public class ImageService {
     }
 
     @Transactional(readOnly = true)
+    public ImageUrlResponseDto createImageViewUrl(Long imageId, String objectKey, Integer sequence) {
+        PresignedUrl presignedUrl = s3Service.createGetObjectPresignedUrl(objectKey);
+        return new ImageUrlResponseDto(
+                presignedUrl.presignedUrl(),
+                imageId,
+                sequence,
+                presignedUrl.httpMethod(),
+                presignedUrl.expiresAt()
+        );
+    }
+
+    @Transactional(readOnly = true)
     public Boolean isExist(Long imageId) {
         String objectKey = imageRepository.findObjectKeyById(imageId);
         if (objectKey == null) {

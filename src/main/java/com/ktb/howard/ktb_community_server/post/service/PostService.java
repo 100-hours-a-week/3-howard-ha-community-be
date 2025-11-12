@@ -6,6 +6,7 @@ import com.ktb.howard.ktb_community_server.cache.repository.ViewCountCacheReposi
 import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
 import com.ktb.howard.ktb_community_server.image.domain.Image;
 import com.ktb.howard.ktb_community_server.image.dto.CreateImageViewUrlRequestDto;
+import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
 import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.like_log.domain.LikeLogType;
 import com.ktb.howard.ktb_community_server.like_log.service.LikeLogService;
@@ -95,20 +96,19 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<GetPostsResponseDto> getPosts(Long cursor, Integer size) {
         PageRequest pageRequest = PageRequest.of(0, size);
-        Slice<Post> posts;
-        if (cursor == 0) posts = postRepository.findPosts(pageRequest);
-        else posts = postRepository.findPostsNextPage(cursor, pageRequest);
+        Slice<GetPostsDto> posts = postQueryRepository.findPostsNextPage(cursor, pageRequest);
         return posts.stream()
-                .map(p -> {
-                    MemberInfoResponseDto profile = memberService.getProfile(p.getWriter().getId());
+                .map(post -> {
+                    ImageUrlResponseDto imageViewUrl = imageService
+                            .createImageViewUrl(post.imageId(), post.objectKey(), post.sequence());
                     return new GetPostsResponseDto(
-                            p.getId(),
-                            p.getTitle(),
-                            likeCountCacheRepository.get(p.getId()).intValue(),
-                            p.getCommentCount(),
-                            viewCountCacheRepository.get(p.getId()),
-                            p.getCreatedAt(),
-                            profile
+                            post.postId(),
+                            post.title(),
+                            likeCountCacheRepository.get(post.postId()).intValue(),
+                            post.commentCount(),
+                            viewCountCacheRepository.get(post.postId()),
+                            post.createdAt(),
+                            new MemberInfoResponseDto(post.email(), post.nickname(), post.imageId(), imageViewUrl.url())
                     );
                 }).toList();
     }

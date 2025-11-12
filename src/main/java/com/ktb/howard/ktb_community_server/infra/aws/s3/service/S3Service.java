@@ -50,7 +50,6 @@ public class S3Service {
                     .build();
 
             PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(presignRequest);
-            log.info("Put Object 용 Presigned URL 발급완료 : {}, {}, {}", objectKey, contentType, contentLength);
             return new PresignedUrl(
                     presigned.url().toString(),
                     HttpMethod.PUT,
@@ -75,7 +74,6 @@ public class S3Service {
                     .build();
 
             PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
-            log.info("Get Object 용 Presigned URL 발급완료 : {}", objectKey);
             return new PresignedUrl(
                     presigned.url().toString(),
                     HttpMethod.GET,
@@ -94,7 +92,6 @@ public class S3Service {
                     .key(objectKey)
                     .build();
             HeadObjectResponse response = s3Client.headObject(objectRequest);
-            log.info("ObjectKey = {}에 대응하는 Object 확인 : {}", objectKey, response);
             return Optional.of(
                     new ObjectMetadata(
                             objectKey,
@@ -114,7 +111,6 @@ public class S3Service {
     }
 
     public void moveObject(String sourceObjectKey, String destinationObjectKey) {
-        log.info("Object 이동 시작 : {} -> {}", sourceObjectKey, destinationObjectKey);
         if (sourceObjectKey.equals(destinationObjectKey)) {
             log.warn("Source와 Destination ObjectKey가 동일하여 이동 작업을 중단: {}", sourceObjectKey);
             return;
@@ -127,13 +123,11 @@ public class S3Service {
                     .destinationKey(destinationObjectKey)
                     .build();
             s3Client.copyObject(copyRequest);
-            log.info("Object 복사 완료 : {} -> {}", sourceObjectKey, destinationObjectKey);
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
                     .bucket(bucket)
                     .key(sourceObjectKey)
                     .build();
             s3Client.deleteObject(deleteRequest);
-            log.info("Object 삭제 완료 : {}", sourceObjectKey);
         } catch (SdkException e) {
             log.error("Object 이동 실패 {} -> {}", sourceObjectKey, destinationObjectKey, e);
             throw new FileStorageException("Object 이동 요청처리 실패. FileStorage 상태를 확인하세요.", e);
