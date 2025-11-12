@@ -1,0 +1,6 @@
+scrape_configs:
+  - job_name: 'leum' # 식별할 이름 (자유롭게 지정)
+    scrape_interval: 15s           # 15초마다 수집
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8081']

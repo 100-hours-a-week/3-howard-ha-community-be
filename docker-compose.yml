@@ -1,0 +1,18 @@
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090" # 프로메테우스 UI 포트
+    volumes:
+      # 1번에서 만든 설정 파일을 Docker 컨테이너 내부로 복사
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000" # 그라파나 UI 포트
+    depends_on:
+      - prometheus # 프로메테우스가 먼저 실행되도록 설정
