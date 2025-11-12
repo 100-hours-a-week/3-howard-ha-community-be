@@ -3,14 +3,16 @@ package com.ktb.howard.ktb_community_server.comment.service;
 import com.ktb.howard.ktb_community_server.comment.domain.Comment;
 import com.ktb.howard.ktb_community_server.comment.dto.CommentResponseDto;
 import com.ktb.howard.ktb_community_server.comment.dto.CreateCommentResponseDto;
+import com.ktb.howard.ktb_community_server.comment.dto.GetCommentsDto;
 import com.ktb.howard.ktb_community_server.comment.exception.CommentNotFoundException;
+import com.ktb.howard.ktb_community_server.comment.repository.CommentQueryRepository;
 import com.ktb.howard.ktb_community_server.comment.repository.CommentRepository;
 import com.ktb.howard.ktb_community_server.exception.InvalidRequestException;
+import com.ktb.howard.ktb_community_server.image.dto.ImageUrlResponseDto;
+import com.ktb.howard.ktb_community_server.image.service.ImageService;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
-import com.ktb.howard.ktb_community_server.member.dto.MemberInfoResponseDto;
 import com.ktb.howard.ktb_community_server.member.exception.MemberNotFoundException;
 import com.ktb.howard.ktb_community_server.member.repository.MemberRepository;
-import com.ktb.howard.ktb_community_server.member.service.MemberService;
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.exception.PostNotFoundException;
 import com.ktb.howard.ktb_community_server.post.repository.PostRepository;
@@ -32,10 +34,11 @@ import static com.ktb.howard.ktb_community_server.api.PostErrorCode.*;
 @Service
 public class CommentService {
 
-    private final MemberService memberService;
     private final CommentRepository commentRepository;
+    private final CommentQueryRepository commentQueryRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final ImageService imageService;
 
     @Transactional
     public CreateCommentResponseDto createComment(
@@ -76,29 +79,39 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getComments(Long postId, Long cursor, Integer size) {
         PageRequest pageRequest = PageRequest.of(0, size);
-        Slice<Comment> comments;
-        if (cursor == 0) comments = commentRepository.findComments(postId, pageRequest);
-        else comments = commentRepository.findCommentsNextPage(postId, cursor, pageRequest);
+        Slice<GetCommentsDto> comments = commentQueryRepository.findCommentsNextPage(postId, cursor, pageRequest);
         return comments.stream()
-                .map(c -> {
-                    MemberInfoResponseDto profile = memberService.getProfile(c.getMember().getId());
+                .map(comment -> {
+                    ImageUrlResponseDto imageViewUrl = imageService
+                            .createImageViewUrl(comment.imageId(), comment.objectKey(), comment.sequence());
                     return new CommentResponseDto(
-                            c,
-                            profile.email(),
-                            profile.nickname(),
-                            profile.imageId(),
-                            profile.profileImageUrl()
+                            comment.commentId(),
+                            comment.content(),
+                            comment.createdAt(),
+                            comment.deletedAt(),
+                            comment.email(),
+                            comment.nickname(),
+                            comment.imageId(),
+                            imageViewUrl.url()
                     );
                 }).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getChildComments(Long parentCommentId) {
-        return commentRepository.findByParentCommentId(parentCommentId).stream()
-                .map(c -> {
-                    MemberInfoResponseDto profile = memberService.getProfile(c.getMember().getId());
+        return commentQueryRepository.getChildComments(parentCommentId).stream()
+                .map(comment -> {
+                    ImageUrlResponseDto imageViewUrl = imageService
+                            .createImageViewUrl(comment.imageId(), comment.objectKey(), comment.sequence());
                     return new CommentResponseDto(
-                            c, profile.email(), profile.nickname(), profile.imageId(), profile.profileImageUrl()
+                            comment.commentId(),
+                            comment.content(),
+                            comment.createdAt(),
+                            comment.deletedAt(),
+                            comment.email(),
+                            comment.nickname(),
+                            comment.imageId(),
+                            imageViewUrl.url()
                     );
                 })
                 .toList();

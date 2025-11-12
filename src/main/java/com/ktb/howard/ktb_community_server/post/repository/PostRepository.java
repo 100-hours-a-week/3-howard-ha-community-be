@@ -2,8 +2,6 @@ package com.ktb.howard.ktb_community_server.post.repository;
 
 import com.ktb.howard.ktb_community_server.post.domain.Post;
 import com.ktb.howard.ktb_community_server.post.dto.CountInfoDto;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,12 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
-
-    @Query("select p from Post p where p.id < :lastPostId order by p.createdAt desc")
-    Slice<Post> findPostsNextPage(@Param("lastPostId") Long lastPostId, PageRequest pageRequest);
-
-    @Query("select p from Post p order by p.createdAt desc")
-    Slice<Post> findPosts(PageRequest pageRequest);
 
     @Query("select new com.ktb.howard.ktb_community_server.post.dto.CountInfoDto(p.likeCount, p.viewCount) " +
             "from Post p " +

@@ -33,4 +33,21 @@ public class CommentResponseDto {
         this.deletedAt = comment.getDeletedAt();
     }
 
+    public CommentResponseDto(
+            Long commentId,
+            String content,
+            LocalDateTime createdAt,
+            LocalDateTime deletedAt,
+            String email,
+            String nickname,
+            Long imageId,
+            String writerProfileImageUrl
+    ) {
+        this.commentId = commentId;
+        this.content = content;
+        this.writerInfo = new MemberInfoResponseDto(email, nickname, imageId, writerProfileImageUrl);
+        this.createdAt = createdAt;
+        this.deletedAt = deletedAt;
+    }
+
 }
