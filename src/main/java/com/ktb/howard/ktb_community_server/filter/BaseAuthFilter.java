@@ -25,22 +25,22 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         }
 
         // 회원가입 API 경로에 대한 허용
-        if ("POST".equals(method) && path.equals("/members")) {
+        if ("POST".equals(method) && path.equals("/api/members")) {
             return true;
         }
 
         // 이메일 확인 API 경로에 대한 허용
-        if ("GET".equals(method) && path.startsWith("/members/emails")) {
+        if ("GET".equals(method) && path.startsWith("/api/members/emails")) {
             return true;
         }
 
         // 닉네임 확인 API 경로에 대한 허용
-        if ("GET".equals(method) && path.startsWith("/members/nicknames")) {
+        if ("GET".equals(method) && path.startsWith("/api/members/nicknames")) {
             return true;
         }
 
         // 이미지 업로드 URL 발급 API 경로에 대한 허용
-        if ("POST".equals(method) && path.startsWith("/images/upload-urls")) {
+        if ("POST".equals(method) && path.startsWith("/api/images/upload-urls")) {
             return true;
         }
 
@@ -50,13 +50,18 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         }
 
         // 로그인 대한 요청
-        if ("POST".equals(method) && path.startsWith("/auth")) {
+        if ("POST".equals(method) && path.startsWith("/api/auth")) {
             return true;
         }
 
 
         // refresh에 대한 요청
-        if ("POST".equals(method) && path.startsWith("/auth/refresh")) {
+        if ("POST".equals(method) && path.startsWith("/api/auth/refresh")) {
+            return true;
+        }
+
+        // health-check에 대한 요청
+        if ("GET".equals(method) && path.startsWith("/actuator/health")) {
             return true;
         }
 

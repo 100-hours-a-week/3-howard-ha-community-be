@@ -76,6 +76,7 @@ public class ImageService {
                 throw new ImageSizeExceededException(IMAGE_SIZE_EXCEEDED);
             }
             Image createdImage = createImage(request.getImageType(), image, ImageStatus.RESERVED);
+            // Lambda 로 대체되어서 돌아가는 부분 -> 이 부분에 대한 로직을 추상화 시키는 방안이 필요함
             PresignedUrl presignedUrl = s3Service.createPutObjectPresignedUrl(
                     createdImage.getObjectKey(),
                     createdImage.getMimeType(),

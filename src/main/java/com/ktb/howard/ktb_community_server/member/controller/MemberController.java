@@ -24,7 +24,7 @@ import java.net.URI;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/members")
 public class MemberController {
 
     private final MemberService memberService;

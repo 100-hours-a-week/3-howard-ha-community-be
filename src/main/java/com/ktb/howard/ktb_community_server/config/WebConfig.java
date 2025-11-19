@@ -27,6 +27,7 @@ public class WebConfig implements WebMvcConfigurer {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:5173");
+        config.addAllowedOrigin("https://www.leum.co.kr");
         config.addAllowedHeader("*"); // 모든 헤더 허용
         config.addAllowedMethod("GET");
         config.addAllowedMethod("POST");
@@ -45,19 +46,20 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addRedirectViewController("/", "/swagger-ui/index.html");
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // 1. 모든 경로(/**)에 대해
-                .allowedOrigins(
-                        "http://localhost:5173"
-                )
-                .allowedMethods(
-                        "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-                )
-                .allowedHeaders("*")    // 4. 허용할 모든 헤더
-                .allowCredentials(true) // 5. 쿠키/세션 인증 정보(Credential) 허용
-                .maxAge(3600);          // 6. Preflight 요청 캐시 시간 (초)
-    }
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**") // 1. 모든 경로(/**)에 대해
+//                .allowedOrigins(
+//                        "http://localhost:5173",
+//                        "http://ktb-howard-leum-hosting.s3-website.ap-northeast-2.amazonaws.com"
+//                )
+//                .allowedMethods(
+//                        "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+//                )
+//                .allowedHeaders("*")    // 4. 허용할 모든 헤더
+//                .allowCredentials(true) // 5. 쿠키/세션 인증 정보(Credential) 허용
+//                .maxAge(3600);          // 6. Preflight 요청 캐시 시간 (초)
+//    }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {

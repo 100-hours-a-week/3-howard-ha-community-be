@@ -71,6 +71,10 @@ tasks.withType(Test).configureEach {
     }
 }
 
+tasks.bootJar {
+    archiveFileName.set("leum-server.jar")
+}
+
 /* QueryDSL 생성 파일 경로 설정 */
 def generatedDir = layout.buildDirectory.dir('generated/querydsl')
 

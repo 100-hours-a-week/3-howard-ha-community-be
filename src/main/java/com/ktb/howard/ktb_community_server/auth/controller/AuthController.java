@@ -26,7 +26,7 @@ import static com.ktb.howard.ktb_community_server.auth.provider.CookieProvider.S
 
 @Slf4j
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
