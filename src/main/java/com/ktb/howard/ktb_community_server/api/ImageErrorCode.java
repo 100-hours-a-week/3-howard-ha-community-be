@@ -23,17 +23,17 @@ public enum ImageErrorCode implements BaseErrorCode {
 
     @Override
     public String getCode() {
-        return "";
+        return this.code;
     }
 
     @Override
     public String getMessage() {
-        return "";
+        return this.message;
     }
 
     @Override
     public HttpStatus getHttpStatus() {
-        return null;
+        return this.httpStatus;
     }
 
 }

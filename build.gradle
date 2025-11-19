@@ -58,6 +58,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     /* Micrometer: Actuator가 '프로메테우스' 형식으로 메트릭을 가공 */
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    /* AWS Lambda */
+    implementation 'software.amazon.awssdk:lambda:2.20.150'
 }
 
 tasks.withType(Test).configureEach {
