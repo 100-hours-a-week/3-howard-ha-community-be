@@ -7,8 +7,6 @@ import com.ktb.howard.ktb_community_server.image.domain.ImageType;
 import com.ktb.howard.ktb_community_server.image.dto.*;
 import com.ktb.howard.ktb_community_server.image.exception.*;
 import com.ktb.howard.ktb_community_server.image.repository.ImageRepository;
-import com.ktb.howard.ktb_community_server.infra.aws.lambda.dto.LambdaRequestDto;
-import com.ktb.howard.ktb_community_server.infra.aws.lambda.service.LambdaService;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.dto.PresignedUrl;
 import com.ktb.howard.ktb_community_server.infra.aws.s3.service.S3Service;
 import com.ktb.howard.ktb_community_server.member.domain.Member;
@@ -30,15 +28,12 @@ import static com.ktb.howard.ktb_community_server.api.ImageErrorCode.*;
 public class ImageService {
 
     private final S3Service s3Service;
-    private final LambdaService lambdaService;
     private final ImageRepository imageRepository;
 
     @Value("${app.s3.bucket}")
     private String bucketName;
     @Value("${aws.region}")
     private String region;
-    @Value("${app.s3.put-ttl-min}")
-    private Integer putTtlMin;
 
     @Transactional
     public Image createImage(ImageType type, ImageMetadata metadata, ImageStatus status) {
@@ -81,18 +76,11 @@ public class ImageService {
                 throw new ImageSizeExceededException(IMAGE_SIZE_EXCEEDED);
             }
             Image createdImage = createImage(request.getImageType(), image, ImageStatus.RESERVED);
-//            PresignedUrl presignedUrl = s3Service.createPutObjectPresignedUrl(
-//                    createdImage.getObjectKey(),
-//                    createdImage.getMimeType(),
-//                    createdImage.getFileSize()
-//            );
-            PresignedUrl presignedUrl = lambdaService.getUploadPresignedUrl(new LambdaRequestDto(
-                    bucketName,
+            PresignedUrl presignedUrl = s3Service.createPutObjectPresignedUrl(
                     createdImage.getObjectKey(),
                     createdImage.getMimeType(),
-                    createdImage.getFileSize(),
-                    putTtlMin
-            ));
+                    createdImage.getFileSize()
+            );
             response.add(new ImageUrlResponseDto(
                     presignedUrl.presignedUrl(),
                     createdImage.getId(),

@@ -28,6 +28,7 @@ public class WebConfig implements WebMvcConfigurer {
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:5173");
         config.addAllowedOrigin("https://www.leum.co.kr");
+        config.addAllowedOrigin("https://www.tkb-howard.cloud");
         config.addAllowedHeader("*"); // 모든 헤더 허용
         config.addAllowedMethod("GET");
         config.addAllowedMethod("POST");

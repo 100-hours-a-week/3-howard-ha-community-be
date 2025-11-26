@@ -99,6 +99,9 @@ public class AuthController {
             ApiResponse<JwtLoginResponseDto> responseBody = ApiResponse.onSuccess();
             return ResponseEntity.created(location).body(responseBody);
         } else if (authService instanceof JwtAuthService) {
+            if (refreshToken == null) {
+                throw new RefreshTokenNotFoundException(REFRESH_TOKEN_NOT_FOUND);
+            }
             Optional<AuthResponseDto> refreshResponseDtoOpt = authService.refresh(refreshToken);
             if (refreshResponseDtoOpt.isEmpty()) {
                 throw new RefreshTokenNotFoundException(REFRESH_TOKEN_NOT_FOUND);
