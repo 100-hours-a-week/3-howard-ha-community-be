@@ -39,6 +39,11 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
             return true;
         }
 
+        // 이미지 메타정보 저장 API 경로에 대한 허용
+        if ("POST".equals(method) && path.startsWith("/api/images")) {
+            return true;
+        }
+
         // 이미지 업로드 URL 발급 API 경로에 대한 허용
         if ("POST".equals(method) && path.startsWith("/api/images/upload-urls")) {
             return true;

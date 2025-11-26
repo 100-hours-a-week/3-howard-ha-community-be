@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.ktb.howard.ktb_community_server.api.ImageErrorCode.*;
+import static com.ktb.howard.ktb_community_server.image.domain.ImageStatus.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -75,7 +76,7 @@ public class ImageService {
                 log.error("이미지 용량 한도 초과! : 현재 용량={}byte", image.fileSize());
                 throw new ImageSizeExceededException(IMAGE_SIZE_EXCEEDED);
             }
-            Image createdImage = createImage(request.getImageType(), image, ImageStatus.RESERVED);
+            Image createdImage = createImage(request.getImageType(), image, RESERVED);
             PresignedUrl presignedUrl = s3Service.createPutObjectPresignedUrl(
                     createdImage.getObjectKey(),
                     createdImage.getMimeType(),
@@ -143,13 +144,13 @@ public class ImageService {
         GenerateObjectKeyResponse persistObjectKey = generateObjectKey(
                 image.getImageType(),
                 image.getFileName(),
-                ImageStatus.PERSIST
+                PERSIST
         );
         s3Service.moveObject(image.getObjectKey(), persistObjectKey.objectKey());
         image.updateOwner(owner);
         image.updateReference(referenceId);
         image.updateObjectKey(persistObjectKey.objectKey());
-        image.updateStatus(ImageStatus.PERSIST);
+        image.updateStatus(PERSIST);
         image.updateSequence(sequence);
     }
 
@@ -163,11 +164,11 @@ public class ImageService {
         GenerateObjectKeyResponse deleteObjectKey = generateObjectKey(
                 image.getImageType(),
                 image.getFileName(),
-                ImageStatus.DELETED
+                DELETED
         );
         s3Service.moveObject(image.getObjectKey(), deleteObjectKey.objectKey());
         image.updateObjectKey(deleteObjectKey.objectKey());
-        image.updateStatus(ImageStatus.DELETED);
+        image.updateStatus(DELETED);
         image.updateDeletedAt(LocalDateTime.now());
     }
 
@@ -179,13 +180,13 @@ public class ImageService {
             log.error("파일 확장자 추출 실패 : {}", originalFileName);
             throw new ExtensionExtractionFailedException(EXTENSION_EXTRACTION_FAILED);
         }
-        if (ImageStatus.RESERVED.equals(status)) {
+        if (RESERVED.equals(status) || TEMPORAL.equals(status)) {
             fileName = UUID.randomUUID() + "." + extension;
             objectKey = (ImageType.PROFILE.equals(imageType) ? "tmp/profiles/" : "tmp/posts/") + fileName;
-        } else if (ImageStatus.PERSIST.equals(status)) {
+        } else if (PERSIST.equals(status)) {
             fileName = originalFileName;
             objectKey = (ImageType.PROFILE.equals(imageType) ? "profiles/" : "posts/") + fileName;
-        } else if (ImageStatus.DELETED.equals(status)) {
+        } else if (DELETED.equals(status)) {
             fileName = originalFileName;
             objectKey = (ImageType.PROFILE.equals(imageType) ? "deleted/profiles/" : "deleted/posts/") + fileName;
         } else {

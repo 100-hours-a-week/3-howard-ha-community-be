@@ -24,7 +24,7 @@ public class ImageController {
     private String lambdaSecretKey;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> createImage(
+    public ResponseEntity<ApiResponse<?>> createImage(
             @RequestHeader(value = "x-lambda-secret-key", required = false) String lambdaSecretKey,
             @RequestBody CreateImageRequestDto request
     ) {
@@ -38,7 +38,12 @@ public class ImageController {
                 new ImageMetadata(request.fileName(), request.fileSize(), request.mimeType(), request.sequence()),
                 request.imageStatus()
         );
-        ApiResponse<String> response = ApiResponse.onSuccess(String.format("이미지 %d 정보 추가완료", createdImage.getId()));
+        CreateImageResponseDto payload = new CreateImageResponseDto(
+                createdImage.getId(),
+                createdImage.getFileName(),
+                createdImage.getCreatedAt()
+        );
+        ApiResponse<CreateImageResponseDto> response = ApiResponse.onSuccess(payload);
         return ResponseEntity.ok(response);
     }
 
