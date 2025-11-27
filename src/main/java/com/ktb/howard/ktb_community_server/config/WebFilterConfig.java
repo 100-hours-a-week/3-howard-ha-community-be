@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 @RequiredArgsConstructor
 @Configuration
@@ -27,7 +28,7 @@ public class WebFilterConfig {
         FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new SessionAuthFilter(authService));
         filterRegistrationBean.addUrlPatterns("/*");
-        filterRegistrationBean.setOrder(1);
+        filterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
         return filterRegistrationBean;
     }
 
@@ -40,7 +41,7 @@ public class WebFilterConfig {
         FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtAuthFilter(jwtProvider));
         filterRegistrationBean.addUrlPatterns("/*");
-        filterRegistrationBean.setOrder(1);
+        filterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
         return filterRegistrationBean;
     }
 
