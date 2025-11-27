@@ -180,8 +180,11 @@ public class ImageService {
             log.error("파일 확장자 추출 실패 : {}", originalFileName);
             throw new ExtensionExtractionFailedException(EXTENSION_EXTRACTION_FAILED);
         }
-        if (RESERVED.equals(status) || TEMPORAL.equals(status)) {
+        if (RESERVED.equals(status)) {
             fileName = UUID.randomUUID() + "." + extension;
+            objectKey = (ImageType.PROFILE.equals(imageType) ? "tmp/profiles/" : "tmp/posts/") + fileName;
+        } else if (TEMPORAL.equals(status)) {
+            fileName = originalFileName;
             objectKey = (ImageType.PROFILE.equals(imageType) ? "tmp/profiles/" : "tmp/posts/") + fileName;
         } else if (PERSIST.equals(status)) {
             fileName = originalFileName;
